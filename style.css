@@ -1,0 +1,175 @@
+/* Import Tailwind CSS using CDN for simplicity */
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+
+/* Custom Styles */
+
+/* Font setting from the original code */
+body { 
+    font-family: 'Inter', sans-serif; 
+    scroll-behavior: smooth; 
+}
+
+/* Hero Section Gradient Text */
+.gradient-text { 
+    background: linear-gradient(to right, #14b8a6, #0ea5e9); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    /* Fallback for non-webkit browsers */
+    color: #0ea5e9; 
+}
+
+/* Header/Navigation Styles */
+.header-fixed {
+    /* bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-gray-200 */
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.nav-link {
+    /* text-gray-600 hover:text-teal-600 transition */
+    color: #4b5563; /* gray-600 */
+    transition: color 0.15s ease-in-out;
+}
+
+.nav-link:hover {
+    color: #0d9488; /* teal-600 */
+}
+
+.cta-button {
+    /* bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded-full transition-colors */
+    background-color: #10b981; /* teal-500 */
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px; /* rounded-full */
+    transition: background-color 0.15s ease-in-out;
+}
+
+.cta-button:hover {
+    background-color: #0d9488; /* teal-600 */
+}
+
+.cta-button-lg {
+    /* bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 inline-block */
+    background-color: #10b981; 
+    color: white;
+    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    font-size: 1.125rem;
+    display: inline-block;
+    transition: transform 0.15s ease-in-out;
+}
+
+.cta-button-lg:hover {
+    transform: scale(1.05);
+    background-color: #0d9488; 
+}
+
+.cta-button-white {
+    /* bg-white hover:bg-gray-100 text-teal-600 font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 inline-block */
+    background-color: white;
+    color: #0d9488;
+    font-weight: 700;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    font-size: 1.125rem;
+    display: inline-block;
+    transition: all 0.15s ease-in-out;
+}
+
+.cta-button-white:hover {
+    background-color: #f3f4f6; /* gray-100 */
+    transform: scale(1.05);
+}
+
+/* How It Works Section */
+.step-icon-bg {
+    /* flex items-center justify-center h-16 w-16 rounded-full bg-teal-100 text-teal-600 mx-auto mb-4 text-2xl font-bold */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 4rem; /* h-16 */
+    width: 4rem; /* w-16 */
+    border-radius: 9999px; /* rounded-full */
+    background-color: #ccfbf1; /* teal-100 */
+    color: #0d9488; /* teal-600 */
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1rem;
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700;
+}
+
+/* Feature Cards */
+.feature-card {
+    /* bg-gray-50 p-6 rounded-lg border border-gray-200 */
+    background-color: #f9fafb; /* gray-50 */
+    padding: 1.5rem;
+    border-radius: 0.5rem; /* rounded-lg */
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+}
+
+.feature-icon-bg {
+    /* bg-teal-100 text-teal-600 rounded-lg p-2 */
+    background-color: #ccfbf1; /* teal-100 */
+    color: #0d9488; /* teal-600 */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.5rem;
+}
+
+/* Admin Feature Cards (slightly different style to distinguish) */
+.feature-card-admin {
+    /* bg-white p-6 rounded-lg border border-teal-200 shadow-md */
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #99f6e4; /* teal-200 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Dashboard Mockup Section */
+.check-icon {
+    /* bg-teal-500 text-white rounded-full h-6 w-6 flex-shrink-0 flex items-center justify-center */
+    background-color: #10b981; /* teal-500 */
+    color: white;
+    border-radius: 9999px;
+    height: 1.5rem;
+    width: 1.5rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-image {
+    /* rounded-xl shadow-2xl */
+    border-radius: 0.75rem; /* rounded-xl */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+    width: 100%; /* Make image responsive */
+    height: auto;
+}
+
+/* Footer Links */
+.footer-heading {
+    /* font-semibold tracking-wider uppercase */
+    font-weight: 600;
+    letter-spacing: 0.05em; /* tracking-wider */
+    text-transform: uppercase;
+}
+
+.footer-link {
+    /* text-gray-400 hover:text-white transition */
+    color: #9ca3af; /* gray-400 */
+    transition: color 0.15s ease-in-out;
+}
+
+.footer-link:hover {
+    color: white;
+}
