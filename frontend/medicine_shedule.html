@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Medicine Schedule Tracker</title>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Medicine Schedule Tracker</h1>
+            <p class="subtitle">Never miss a dose with your personalized medicine schedule</p>
+        </header>
+        
+        <div class="schedule-container">
+            <div class="schedule-header">
+                <h2 class="schedule-title">Upcoming Schedule</h2>
+                <button class="add-btn" id="addMedicineBtn">
+                    <span>+</span> Add Medicine
+                </button>
+            </div>
+            
+            <ul class="medicine-list" id="medicineList">
+                <!-- Medicine items will be dynamically added here -->
+            </ul>
+            
+            <div class="empty-state" id="emptyState">
+                <p>No medicines scheduled for today.</p>
+                <button class="add-btn" id="addMedicineEmptyBtn">
+                    <span>+</span> Add Your First Medicine
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Medicine Modal -->
+    <div class="modal" id="medicineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Medicine</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <form id="medicineForm">
+                <div class="form-group-med">
+                    <label for="medicineName">Medicine Name</label>
+                    <input type="text" id="medicineName" required placeholder="e.g., Aspirin">
+                </div>
+                
+                <div class="form-group-med">
+                    <label for="dosage">Dosage</label>
+                    <input type="text" id="dosage" required placeholder="e.g., 500mg">
+                </div>
+                
+                <div class="form-group-med">
+                    <label for="frequency">Frequency</label>
+                    <select id="frequency" required>
+                        <option value="">Select frequency</option>
+                        <option value="once">Once a day</option>
+                        <option value="twice">Twice a day</option>
+                        <option value="thrice">Three times a day</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div class="form-group-med">
+                    <label for="scheduleTime">Schedule Time</label>
+                    <div class="time-inputs">
+                        <input type="time" id="scheduleTime" required>
+                    </div>
+                </div>
+                
+                <div class="form-group-med">
+                    <label for="notes">Notes (Optional)</label>
+                    <input type="text" id="notes" placeholder="Any additional instructions">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Medicine</button>
+                </div>
+            </form>
+        </div>
+    </div>
