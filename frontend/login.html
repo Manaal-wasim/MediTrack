@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MediTrack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Side - Login Form -->
+        <div class="auth-form-section">
+            <div class="auth-header">
+                <h1>Login to your Account</h1>
+                <p class="subtitle">Stay on Top of Your Health, Every Day.</p>
+            </div>
+
+            <form class="auth-form">
+                <!-- Email Input -->
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+
+                <!-- Password Input -->
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <span class="toggle-password">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                <!-- Login Button -->
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+
+                <!-- Sign Up Link -->
+                <div class="auth-switch">
+                    <p>Don't have an account? <a href="signup.html" class="switch-link">Sign up</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Side - Hero Section -->
+        <div class="auth-hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-rocket"></i>
+                    Turn Your Health Goals into Reality
+                </div>
+                <h2>Start for free and manage your medications, doctor appointments, and health records effortlessly.
+                </h2>
+                <p>Join thousands of users who are already taking control of their health with our app.</p>
+                
+                <div class="hero-features">
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Private Health Data</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Real-Time Medication Reminders</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-users"></i>
+                        <span>Organized Appointments & Records</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

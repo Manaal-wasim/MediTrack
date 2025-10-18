@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - MediTrack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container-signup">
+        <!-- Left Side - Sign Up Form -->
+        <div class="auth-form-section-signup">
+            <div class="auth-header">
+                <h1>Create Your Account</h1>
+                <p class="subtitle">Stay on Top of Your Health, Every Day.</p>
+            </div>
+
+            <form class="auth-form">
+                <!-- Full Name Input -->
+                <div class="form-group">
+                    <label for="fullname">
+                        <i class="fas fa-user"></i>
+                        Full Name
+                    </label>
+                    <input type="text" id="fullname" placeholder="Enter your full name" required>
+                </div>
+
+                <!-- Email Input -->
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                
+                <!-- Password Input -->
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <span class="toggle-password">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+
+                <!-- Confirm Password Input -->
+                <div class="form-group">
+                    <label for="confirm-password">
+                        <i class="fas fa-lock"></i>
+                        Confirm Password
+                    </label>
+                    <input type="password" id="confirm-password" placeholder="Confirm your password" required>
+                    <span class="toggle-password">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
+                <!-- Sign Up Button -->
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </button>
+
+                <!-- Login Link -->
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="login.html" class="switch-link">Login</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Side - Hero Section -->
+        <div class="auth-hero-section">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-heartbeat"></i>
+                    Take Charge of Your Health
+                </div>
+                <h2>Start for free and track your medications, appointments, and health records effortlessly.</h2>
+                <p>Join thousands of users who are already managing their health smartly with MediTrack.</p>
+                
+                <div class="hero-features">
+                    <div class="feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure & Private Health Data</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-bell"></i>
+                        <span>Medication Reminders & Alerts</span>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Organized Appointments & Records</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
