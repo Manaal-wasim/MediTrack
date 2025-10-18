@@ -1,81 +1,91 @@
 /* Import Tailwind CSS using CDN for simplicity */
 @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
 
-/* Custom Styles */
-
-/* Font setting from the original code */
-body { 
-    font-family: 'Inter', sans-serif; 
-    scroll-behavior: smooth; 
+/* Custom Color Palette (based on your login page) */
+:root {
+    --color-primary: #8a7aff;      /* Main CTA button, active elements (Purple) */
+    --color-primary-light: #b0a7ff; /* Lighter primary for hover/backgrounds */
+    --color-primary-dark: #6e64cc; /* Darker primary for text/borders */
+    --color-secondary: #ffadad;   /* Highlight/Accent (Pinkish) */
+    --color-secondary-light: #ffe6e6; /* Very light pink background */
+    --color-light-bg: #f5f7fa;     /* Light gray background, similar to login page's main background */
+    --color-dark-text: #333;       /* Main dark text color */
+    --color-light-text: #6b7280;   /* Secondary light text color */
+    --color-light-text-alt: #ffffffcc; /* Text on dark backgrounds */
+    --color-white: #ffffff;        /* Pure white */
+    --color-border: #e0e0e0;       /* Light border color */
+    --color-dark-footer: #3c3b5d; /* Dark footer similar to login right panel */
 }
 
-/* Hero Section Gradient Text */
+/* Base Styles */
+body { 
+    font-family: 'Lora', sans-serif; 
+    scroll-behavior: smooth; 
+    background-color: var(--color-light-bg);
+    color: var(--color-dark-text);
+}
+
+/* Hero Section Gradient Text - updated to use the new pink/purple */
 .gradient-text { 
-    background: linear-gradient(to right, #14b8a6, #0ea5e9); 
+    background: linear-gradient(to right, var(--color-secondary), var(--color-primary)); 
     -webkit-background-clip: text; 
     -webkit-text-fill-color: transparent; 
-    /* Fallback for non-webkit browsers */
-    color: #0ea5e9; 
+    color: var(--color-primary); /* Fallback */
 }
 
 /* Header/Navigation Styles */
 .header-fixed {
-    /* bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-gray-200 */
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.9); /* More opaque white for header */
+    backdrop-filter: blur(8px);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 50;
-    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    border-bottom: 1px solid var(--color-border);
 }
 
 .nav-link {
-    /* text-gray-600 hover:text-teal-600 transition */
-    color: #4b5563; /* gray-600 */
+    color: var(--color-light-text);
     transition: color 0.15s ease-in-out;
 }
 
 .nav-link:hover {
-    color: #0d9488; /* teal-600 */
+    color: var(--color-primary-dark);
 }
 
 .cta-button {
-    /* bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2 rounded-full transition-colors */
-    background-color: #10b981; /* teal-500 */
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-white);
     font-weight: 600;
     padding: 0.5rem 1.25rem;
-    border-radius: 9999px; /* rounded-full */
+    border-radius: 9999px;
     transition: background-color 0.15s ease-in-out;
 }
 
 .cta-button:hover {
-    background-color: #0d9488; /* teal-600 */
+    background-color: var(--color-primary-dark);
 }
 
 .cta-button-lg {
-    /* bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 inline-block */
-    background-color: #10b981; 
-    color: white;
+    background-color: var(--color-primary); 
+    color: var(--color-white);
     font-weight: 700;
     padding: 0.75rem 2rem;
     border-radius: 9999px;
     font-size: 1.125rem;
     display: inline-block;
-    transition: transform 0.15s ease-in-out;
+    transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out;
 }
 
 .cta-button-lg:hover {
     transform: scale(1.05);
-    background-color: #0d9488; 
+    background-color: var(--color-primary-dark); 
 }
 
 .cta-button-white {
-    /* bg-white hover:bg-gray-100 text-teal-600 font-bold py-3 px-8 rounded-full text-lg transition-transform transform hover:scale-105 inline-block */
-    background-color: white;
-    color: #0d9488;
+    background-color: var(--color-white);
+    color: var(--color-primary);
     font-weight: 700;
     padding: 0.75rem 2rem;
     border-radius: 9999px;
@@ -85,60 +95,47 @@ body {
 }
 
 .cta-button-white:hover {
-    background-color: #f3f4f6; /* gray-100 */
+    background-color: var(--color-secondary-light);
     transform: scale(1.05);
 }
 
 /* How It Works Section */
 .step-icon-bg {
-    /* flex items-center justify-center h-16 w-16 rounded-full bg-teal-100 text-teal-600 mx-auto mb-4 text-2xl font-bold */
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 4rem; /* h-16 */
-    width: 4rem; /* w-16 */
-    border-radius: 9999px; /* rounded-full */
-    background-color: #ccfbf1; /* teal-100 */
-    color: #0d9488; /* teal-600 */
+    height: 4rem;
+    width: 4rem;
+    border-radius: 9999px;
+    background-color: var(--color-primary-light); /* Using primary light for steps */
+    color: var(--color-white);
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 1rem;
-    font-size: 1.5rem; /* text-2xl */
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
 /* Feature Cards */
 .feature-card {
-    /* bg-gray-50 p-6 rounded-lg border border-gray-200 */
-    background-color: #f9fafb; /* gray-50 */
+    background-color: var(--color-white); /* White background for cards */
     padding: 1.5rem;
-    border-radius: 0.5rem; /* rounded-lg */
-    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.75rem; /* Slightly more rounded */
+    border: 1px solid var(--color-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Subtle shadow */
 }
 
 .feature-icon-bg {
-    /* bg-teal-100 text-teal-600 rounded-lg p-2 */
-    background-color: #ccfbf1; /* teal-100 */
-    color: #0d9488; /* teal-600 */
-    border-radius: 0.5rem; /* rounded-lg */
-    padding: 0.5rem;
-}
-
-/* Admin Feature Cards (slightly different style to distinguish) */
-.feature-card-admin {
-    /* bg-white p-6 rounded-lg border border-teal-200 shadow-md */
-    background-color: white;
-    padding: 1.5rem;
+    background-color: var(--color-secondary-light); /* Lighter pink for icons */
+    color: var(--color-primary); /* Primary purple for icon content */
     border-radius: 0.5rem;
-    border: 1px solid #99f6e4; /* teal-200 */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
 }
 
 /* Dashboard Mockup Section */
 .check-icon {
-    /* bg-teal-500 text-white rounded-full h-6 w-6 flex-shrink-0 flex items-center justify-center */
-    background-color: #10b981; /* teal-500 */
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-white);
     border-radius: 9999px;
     height: 1.5rem;
     width: 1.5rem;
@@ -149,27 +146,77 @@ body {
 }
 
 .dashboard-image {
-    /* rounded-xl shadow-2xl */
-    border-radius: 0.75rem; /* rounded-xl */
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
-    width: 100%; /* Make image responsive */
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Softer shadow */
+    width: 100%;
     height: auto;
+}
+
+/* New Image Section */
+#about-us img {
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+/* Call to Action Section */
+#cta {
+    background-color: var(--color-primary);
 }
 
 /* Footer Links */
 .footer-heading {
-    /* font-semibold tracking-wider uppercase */
     font-weight: 600;
-    letter-spacing: 0.05em; /* tracking-wider */
+    letter-spacing: 0.05em;
     text-transform: uppercase;
+    color: var(--color-primary-light); /* Lighter color for headings */
 }
 
 .footer-link {
-    /* text-gray-400 hover:text-white transition */
-    color: #9ca3af; /* gray-400 */
+    color: #cbd5e1; /* A light gray that works well on dark purple */
     transition: color 0.15s ease-in-out;
 }
 
 .footer-link:hover {
-    color: white;
+    color: var(--color-white);
+}
+
+/* Specific section backgrounds */
+.bg-light-bg {
+    background-color: var(--color-light-bg);
+}
+
+.bg-light-section {
+    background-color: var(--color-secondary-light); /* Lighter pink for specific sections */
+}
+
+.bg-dark-footer {
+    background-color: var(--color-dark-footer);
+}
+
+/* --- New Section for Image Formatting Fix --- */
+
+/* Fixes the image sizing and aspect ratio within the About Us section */
+.about-image-container {
+    /* Ensures the container respects aspect ratio on smaller screens */
+    width: 100%;
+    /* You can adjust this max-width if you want the image to be larger/smaller on desktop */
+    max-width: 400px; 
+}
+
+.about-image-fixed {
+    /* Ensures the image fills its container */
+    width: 100%;
+    /* Forces a specific height so the text doesn't wrap oddly */
+    height: 350px; 
+    /* This makes sure the image covers the area without distortion, cropping as needed */
+    object-fit: cover; 
+}
+
+/* On smaller screens, allow the image to scale naturally */
+@media (max-width: 768px) {
+    .about-image-fixed {
+        height: auto;
+        max-height: none;
+    }
 }
