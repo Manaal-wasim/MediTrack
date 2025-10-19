@@ -1099,8 +1099,16 @@ body {
 
 .logo h1 {
     color: var(--dark-purple);
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     margin-left: 10px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--medium-pink), var(--dark-purple)); 
+    -webkit-background-clip: text; /* ADD THIS LINE */
+    -webkit-text-fill-color: transparent; /* ADD THIS LINE */
+    background-clip: text; /* ADD THIS LINE */
+}
+
+
 }
 
 .logo-icon {
@@ -1161,11 +1169,12 @@ body {
     color: var(--dark-purple);
     font-weight: 600;
     margin-bottom: 5px;
+     font-size: 2rem;
 }
 
 #current-date-display {
     color: var(--text-medium);
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .header-right {
