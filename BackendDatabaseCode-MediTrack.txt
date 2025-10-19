@@ -1,0 +1,83 @@
+CREATE DATABASE SmartHealthReminder;
+USE SmartHealthReminder;
+CREATE TABLE User (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('client', 'admin') NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE Client (
+    client_id INT PRIMARY KEY,
+    age INT,
+    gender ENUM('Male', 'Female', 'Other'),
+    contact VARCHAR(20),
+    FOREIGN KEY (client_id) REFERENCES User(user_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE Admin (
+    admin_id INT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    last_login DATETIME,
+    FOREIGN KEY (admin_id) REFERENCES User(user_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE Doctor (
+    doctor_id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT,
+    name VARCHAR(100) NOT NULL,
+    specialization VARCHAR(100),
+    contact VARCHAR(20),
+    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE Medicine (
+    medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    client_id INT,
+    name VARCHAR(100) NOT NULL,
+    dosage VARCHAR(100),
+    note TEXT,
+    FOREIGN KEY (client_id) REFERENCES Client(client_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE Reminder (
+    reminder_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT,
+    reminder_time DATETIME NOT NULL,
+    status ENUM('Pending', 'Triggered', 'Completed') DEFAULT 'Pending',
+    FOREIGN KEY (medicine_id) REFERENCES Medicine(medicine_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE Log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    reminder_id INT,
+    action ENUM('Taken', 'Missed') NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (reminder_id) REFERENCES Reminder(reminder_id)
+        ON DELETE CASCADE
+);
+
+
+
+
+#sample data insertion
+
+
+-- Create Admin User
+INSERT INTO User (name, email, password, role) 
+VALUES ('aleena', 'aleena@admin.com', 'aleena123', 'admin');
+
+-- Create Client User
+INSERT INTO User (name, email, password, role) 
+VALUES ('Sara', 'sara555@gmail.com', 'sara123', 'client');
+
+-- Link Client
+INSERT INTO Client (client_id, age, gender, contact)
+VALUES (2, 25, 'Female', '03001234567');
+
+_Link Admin User
+INSERT INTO Admin (admin_id, username, last_login)
+VALUES (1, 'aleena', '2025-10-19 13:12:52');
+
+
