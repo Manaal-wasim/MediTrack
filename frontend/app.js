@@ -83,3 +83,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+// -------------------- ADMIN DASHBOARD SCRIPT --------------------
+
+// Only run this code on the admin dashboard page
+if (window.location.pathname.includes("admin.html")) {
+
+    // Sidebar navigation handling
+    const navLinks = document.querySelectorAll('.sidebar ul li');
+    const sections = document.querySelectorAll('.main-content section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            // Remove active state from all links
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            // Show corresponding section
+            const targetId = link.dataset.target;
+            sections.forEach(section => {
+                section.style.display = (section.id === targetId) ? 'block' : 'none';
+            });
+        });
+    });
+
+    // Example: Delete user (just for frontend demo)
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = btn.closest('tr');
+            if (confirm("Are you sure you want to delete this user?")) {
+                row.remove();
+                alert("User deleted!");
+            }
+        });
+    });
+
+    // Example: Add advertisement
+    const adForm = document.getElementById('ad-form');
+    if (adForm) {
+        adForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const adTitle = document.getElementById('ad-title').value.trim();
+            const adDesc = document.getElementById('ad-desc').value.trim();
+
+            if (!adTitle || !adDesc) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            alert(`Advertisement "${adTitle}" added successfully!`);
+            adForm.reset();
+        });
+    }
+
+    // Example: Display simple stats dynamically
+    const totalUsers = document.getElementById('total-users');
+    const activeAds = document.getElementById('active-ads');
+    const dbEntries = document.getElementById('db-entries');
+
+    if (totalUsers && activeAds && dbEntries) {
+        totalUsers.textContent = "126";
+        activeAds.textContent = "18";
+        dbEntries.textContent = "547";
+    }
+}

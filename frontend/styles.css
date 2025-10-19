@@ -828,3 +828,217 @@ select {
     }
 
 }
+/* ==================== ADMIN DASHBOARD STYLES ==================== */
+
+/* General layout */
+body {
+  background: linear-gradient(135deg, #ffe6f0, #fff4e6, #f7acd8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Dashboard container */
+.dashboard {
+  display: flex;
+  width: 95%;
+  height: 90vh;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 230px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.logo {
+  text-align: center;
+  color:#A97AF2;
+  font-weight: 800;
+}
+
+.logo span {
+  color: #ff6fa0;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin-top: 20px;
+}
+
+.sidebar ul li {
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #333;
+  cursor: pointer;
+  transition: 0.3s;
+  text-align: center;
+}
+
+.sidebar ul li:hover,
+.sidebar ul li.active {
+  background: linear-gradient(135deg, #ff6fa0, #A97AF2);
+  color: white;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.section {
+  display: none;
+  animation: fadeIn 0.5s ease;
+}
+
+.section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cards */
+.cards {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.card {
+  flex: 1;
+  padding: 25px;
+  text-align: center;
+  border-radius: 20px;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+  font-size: 2rem;
+  color: #A97AF2;
+}
+
+.card p {
+  color: #555;
+  margin-top: 8px;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+  padding: 14px;
+  text-align: center;
+}
+
+th {
+  background: linear-gradient(135deg, #ffb6c1, #A97AF2);
+  color: white;
+}
+
+tr:nth-child(even) {
+  background: rgba(255, 250, 240, 0.7);
+}
+
+.delete-btn {
+  background: #ff4d6d;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.delete-btn:hover {
+  background: #A97AF2;
+}
+
+/* Form */
+form {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+form label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+form input {
+  padding: 8px;
+  margin-bottom: 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  outline: none;
+}
+
+form button {
+  background: linear-gradient(135deg, #ff6fa0, #A97AF2);
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+form button:hover {
+  background: #d63384;
+}
+
+.subtitle {
+  color: #555;
+  margin-top: 10px;
+}
+/* Style for the Welcome Admin heading */
+.main-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #A97AF2;
+  text-shadow: 0 1px 2px rgba(255, 182, 193, 0.6);
+  letter-spacing: 0.5px;
+}
+

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <!-- Link to your existing stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2 class="logo">Medi<span>Track</span></h2>
+            <ul>
+                <li class="active" onclick="showSection('home')"><i class="fas fa-home"></i> Home</li>
+                <li onclick="showSection('users')"><i class="fas fa-users"></i> Manage Users</li>
+                <li onclick="showSection('medicines')"><i class="fas fa-pills"></i> Manage Medicines</li>
+                <li onclick="showSection('reports')"><i class="fas fa-chart-bar"></i> Reports</li>
+                <li onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Home Section -->
+            <section id="home" class="section active">
+                <h1>Welcome, Admin </h1>
+                <p class="subtitle">Here’s an overview of your system statistics.</p>
+
+                <div class="cards">
+                    <div class="card glass">
+                        <h3>1,240</h3>
+                        <p>Registered Users</p>
+                    </div>
+                    <div class="card glass">
+                        <h3>420</h3>
+                        <p>Active Reminders</p>
+                    </div>
+                    <div class="card glass">
+                        <h3>98%</h3>
+                        <p>Uptime Rate</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users" class="section">
+                <h1>Manage Users</h1>
+                <table>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                    <tr>
+                        <td>Ali Khan</td>
+                        <td>ali@example.com</td>
+                        <td><button class="delete-btn">Delete</button></td>
+                    </tr>
+                    <tr>
+                        <td>Fatima Ahmed</td>
+                        <td>fatima@example.com</td>
+                        <td><button class="delete-btn">Delete</button></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Medicines Section -->
+            <section id="medicines" class="section">
+                <h1>Manage Medicines</h1>
+                <form>
+                    <label for="medicine">Medicine Name</label>
+                    <input type="text" id="medicine" placeholder="Enter medicine name">
+                    <label for="dosage">Dosage</label>
+                    <input type="text" id="dosage" placeholder="Enter dosage">
+                    <button type="submit">Add Medicine</button>
+                </form>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="section">
+                <h1>Reports</h1>
+                <p>Coming soon... 📊</p>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <h1>Settings</h1>
+                <p>Customize your dashboard preferences.</p>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Section switching logic
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
