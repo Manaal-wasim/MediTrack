@@ -859,7 +859,7 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   border-right: 1px solid rgba(255, 255, 255, 0.4);
 }
 
@@ -1042,7 +1042,7 @@ form button:hover {
   letter-spacing: 0.5px;
 }
 
-/* user dashboard script */
+/* ----------------user dashboard script ----------------------*/
 /* Color Variables */
 :root {
     --cream: #f9f4f1;
@@ -1126,6 +1126,7 @@ body {
     border-radius: 8px;
     transition: all 0.3s ease;
     cursor: pointer;
+    font-weight: 600; 
 }
 
 .nav-links a:hover, .nav-links a.active {
