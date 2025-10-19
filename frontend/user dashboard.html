@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meditrack - User Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <span class="logo-icon"></span>
+                <h1>Meditrack</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-section="dashboard"><i></i> Dashboard</a></li>
+                <li><a href="#" data-section="medications"><i></i> Medications</a></li>
+                <li><a href="#" data-section="schedule"><i></i> Schedule</a></li>
+                <li><a href="#" data-section="doctors"><i></i> Doctors</a></li>
+                <li><a href="#" data-section="summary"><i></i> Adherence</a></li>
+                <li><a href="#" id="logout-btn"><i></i> Logout</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <h2 id="welcome-message">Welcome back, Sarah!</h2>
+                    <p id="current-date-display">Today is Sunday, October 19, 2025</p>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-details">
+                            <span id="username">Sarah Johnson</span>
+                            <span class="user-role">Patient</span>
+                        </div>
+                        <div class="user-avatar">
+                            <div class="avatar-placeholder">SJ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card purple">
+                    <div class="stat-icon">💊</div>
+                    <div class="stat-content">
+                        <h3>Active Medications</h3>
+                        <div class="value" id="active-meds-count">5</div>
+                        <div class="trend up">+1 from last week</div>
+                    </div>
+                </div>
+                <div class="stat-card pink">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-content">
+                        <h3>Upcoming Doses</h3>
+                        <div class="value" id="upcoming-doses">3</div>
+                        <div class="trend down">Next in 2 hours</div>
+                    </div>
+                </div>
+                <div class="stat-card cream">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h3>Adherence Rate</h3>
+                        <div class="value" id="adherence-rate">92%</div>
+                        <div class="trend up">+3% this week</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon">❤️</div>
+                    <div class="stat-content">
+                        <h3>Health Score</h3>
+                        <div class="value" id="health-score">86</div>
+                        <div class="trend up">+2 this month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Left Column -->
+                <div class="content-column">
+                    <!-- Today's Medications -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Today's Medications</h3>
+                            <a href="#" class="view-all">View Schedule</a>
+                        </div>
+                        <div class="medications-today">
+                            <div class="medication-time-group">
+                                <h4>Morning <span class="time-indicator">8:00 AM</span></h4>
+                                <div class="medication-item">
+                                    <div class="med-info">
+                                        <div class="med-icon">💊</div>
+                                        <div>
+                                            <h5>Metformin</h5>
+                                            <p>500mg · For diabetes</p>
+                                        </div>
+                                    </div>
+                                    <button class="status-btn taken">Taken</button>
+                                </div>
+                            </div>
+                            
+                            <div class="medication-time-group">
+                                <h4>Afternoon <span class="time-indicator">12:00 PM</span></h4>
+                                <div class="medication-item">
+                                    <div class="med-info">
+                                        <div class="med-icon">💊</div>
+                                        <div>
+                                            <h5>Lisinopril</h5>
+                                            <p>10mg · For blood pressure</p>
+                                        </div>
+                                    </div>
+                                    <button class="status-btn pending">Mark Taken</button>
+                                </div>
+                            </div>
+                            
+                            <div class="medication-time-group">
+                                <h4>Evening <span class="time-indicator">6:00 PM</span></h4>
+                                <div class="medication-item">
+                                    <div class="med-info">
+                                        <div class="med-icon">💊</div>
+                                        <div>
+                                            <h5>Atorvastatin</h5>
+                                            <p>20mg · For cholesterol</p>
+                                        </div>
+                                    </div>
+                                    <button class="status-btn pending">Mark Taken</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Quick Actions</h3>
+                        </div>
+                        <div class="quick-actions-grid">
+                            <button class="action-card" id="add-medication-btn">
+                                <div class="action-icon">➕</div>
+                                <span>Add Medication</span>
+                            </button>
+                            <button class="action-card" id="log-symptoms-btn">
+                                <div class="action-icon">📝</div>
+                                <span>Log Symptoms</span>
+                            </button>
+                            <button class="action-card" id="schedule-appointment-btn">
+                                <div class="action-icon">📅</div>
+                                <span>New Appointment</span>
+                            </button>
+                            <button class="action-card" id="view-reports-btn">
+                                <div class="action-icon">📊</div>
+                                <span>Health Reports</span>
+                            </button>
+                            <button class="action-card" id="emergency-contact-btn">
+                                <div class="action-icon">🆘</div>
+                                <span>Emergency</span>
+                            </button>
+                            <button class="action-card" id="medication-refill-btn">
+                                <div class="action-icon">🔄</div>
+                                <span>Refill Request</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="content-column">
+                    <!-- Upcoming Appointments -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Upcoming Appointments</h3>
+                            <a href="#" class="view-all">View All</a>
+                        </div>
+                        <div class="appointments-list">
+                            <div class="appointment-item">
+                                <div class="appointment-date">
+                                    <span class="date-day">18</span>
+                                    <span class="date-month">OCT</span>
+                                </div>
+                                <div class="appointment-details">
+                                    <h5>Dr. Emily Chen</h5>
+                                    <p>Cardiologist · 10:00 AM</p>
+                                    <span class="appointment-location">City Medical Center</span>
+                                </div>
+                                <button class="appointment-action">View</button>
+                            </div>
+                            <div class="appointment-item">
+                                <div class="appointment-date">
+                                    <span class="date-day">25</span>
+                                    <span class="date-month">OCT</span>
+                                </div>
+                                <div class="appointment-details">
+                                    <h5>Dr. Michael Roberts</h5>
+                                    <p>Endocrinologist · 2:30 PM</p>
+                                    <span class="appointment-location">Westside Clinic</span>
+                                </div>
+                                <button class="appointment-action">View</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Health Progress -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Health Progress</h3>
+                            <a href="#" class="view-all">See Details</a>
+                        </div>
+                        <div class="health-progress">
+                            <div class="progress-item">
+                                <div class="progress-info">
+                                    <span class="progress-label">Medication Adherence</span>
+                                    <span class="progress-value">92%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill excellent"></div>
+                                </div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-info">
+                                    <span class="progress-label">Appointment Attendance</span>
+                                    <span class="progress-value">100%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill excellent"></div>
+                                </div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-info">
+                                    <span class="progress-label">Symptom Tracking</span>
+                                    <span class="progress-value">75%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill good"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivational Quotes Section -->
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Daily Motivation</h3>
+                        </div>
+                        <div class="motivational-quotes">
+                            <div class="quote-item">
+                                <div class="quote-icon">💪</div>
+                                <div class="quote-content">
+                                    <p>"Your health is an investment, not an expense. Every dose taken is a step toward better days."</p>
+                                </div>
+                            </div>
+                            <div class="quote-item">
+                                <div class="quote-icon">🌟</div>
+                                <div class="quote-content">
+                                    <p>"Consistency is the key to success. You've maintained 92% adherence this week!"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
