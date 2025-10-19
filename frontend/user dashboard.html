@@ -11,16 +11,17 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo">
-                <span class="logo-icon"></span>
-                <h1>Meditrack</h1>
+                <span class="logo-icon">💊</span>
+                <h1><span class="logo-medi">Medi</span><span class="logo-track">track</span></h1>
             </div>
             <ul class="nav-links">
-                <li><a href="#" class="active" data-section="dashboard"><i></i> Dashboard</a></li>
-                <li><a href="#" data-section="medications"><i></i> Medications</a></li>
-                <li><a href="#" data-section="schedule"><i></i> Schedule</a></li>
-                <li><a href="#" data-section="doctors"><i></i> Doctors</a></li>
-                <li><a href="#" data-section="summary"><i></i> Adherence</a></li>
-                <li><a href="#" id="logout-btn"><i></i> Logout</a></li>
+                <li><a href="#" class="active" data-section="dashboard"><i>📊</i> Dashboard</a></li>
+                <li><a href="#" data-section="medications"><i>💊</i> My Medications</a></li>
+                <li><a href="#" data-section="schedule"><i>📅</i> Medication Schedule</a></li>
+                <li><a href="#" data-section="doctors"><i>👨‍⚕️</i> My Doctors</a></li>
+                <li><a href="#" data-section="adherence"><i>📈</i> Adherence Summary</a></li>
+                <li><a href="#" data-section="upcoming"><i>⏰</i> Upcoming Medicines</a></li>
+                <li><a href="#" id="logout-btn"><i>🚪</i> Logout</a></li>
             </ul>
         </div>
 
@@ -29,7 +30,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="header-left">
-                    <h2 id="welcome-message">Welcome back, Sarah!</h2>
+                    <h2 id="welcome-message">Welcome back, Sarah Johnson!</h2>
                     <p id="current-date-display">Today is Sunday, October 19, 2025</p>
                 </div>
                 <div class="header-right">
@@ -58,7 +59,7 @@
                 <div class="stat-card pink">
                     <div class="stat-icon">⏰</div>
                     <div class="stat-content">
-                        <h3>Upcoming Doses</h3>
+                        <h3>Upcoming Doses Today</h3>
                         <div class="value" id="upcoming-doses">3</div>
                         <div class="trend down">Next in 2 hours</div>
                     </div>
@@ -72,11 +73,11 @@
                     </div>
                 </div>
                 <div class="stat-card purple">
-                    <div class="stat-icon">❤️</div>
+                    <div class="stat-icon">📋</div>
                     <div class="stat-content">
-                        <h3>Health Score</h3>
-                        <div class="value" id="health-score">86</div>
-                        <div class="trend up">+2 this month</div>
+                        <h3>Saved Doctors</h3>
+                        <div class="value" id="doctors-count">2</div>
+                        <div class="trend up">+1 this month</div>
                     </div>
                 </div>
             </div>
@@ -89,7 +90,7 @@
                     <div class="content-card">
                         <div class="card-header">
                             <h3>Today's Medications</h3>
-                            <a href="#" class="view-all">View Schedule</a>
+                            <a href="#" class="view-all" data-section="schedule">View Schedule</a>
                         </div>
                         <div class="medications-today">
                             <div class="medication-time-group">
@@ -100,6 +101,7 @@
                                         <div>
                                             <h5>Metformin</h5>
                                             <p>500mg · For diabetes</p>
+                                            <span class="med-notes">Take with food</span>
                                         </div>
                                     </div>
                                     <button class="status-btn taken">Taken</button>
@@ -146,25 +148,13 @@
                                 <div class="action-icon">➕</div>
                                 <span>Add Medication</span>
                             </button>
-                            <button class="action-card" id="log-symptoms-btn">
-                                <div class="action-icon">📝</div>
-                                <span>Log Symptoms</span>
+                            <button class="action-card" id="add-doctor-btn">
+                                <div class="action-icon">👨‍⚕️</div>
+                                <span>Add Doctor</span>
                             </button>
-                            <button class="action-card" id="schedule-appointment-btn">
-                                <div class="action-icon">📅</div>
-                                <span>New Appointment</span>
-                            </button>
-                            <button class="action-card" id="view-reports-btn">
-                                <div class="action-icon">📊</div>
-                                <span>Health Reports</span>
-                            </button>
-                            <button class="action-card" id="emergency-contact-btn">
-                                <div class="action-icon">🆘</div>
-                                <span>Emergency</span>
-                            </button>
-                            <button class="action-card" id="medication-refill-btn">
-                                <div class="action-icon">🔄</div>
-                                <span>Refill Request</span>
+                            <button class="action-card" id="search-medications-btn">
+                                <div class="action-icon">🔍</div>
+                                <span>Search Medications</span>
                             </button>
                         </div>
                     </div>
@@ -172,50 +162,46 @@
 
                 <!-- Right Column -->
                 <div class="content-column">
-                    <!-- Upcoming Appointments -->
+                    <!-- My Doctors -->
                     <div class="content-card">
                         <div class="card-header">
-                            <h3>Upcoming Appointments</h3>
-                            <a href="#" class="view-all">View All</a>
+                            <h3>My Doctors</h3>
+                            <a href="#" class="view-all" data-section="doctors">View All</a>
                         </div>
                         <div class="appointments-list">
                             <div class="appointment-item">
-                                <div class="appointment-date">
-                                    <span class="date-day">18</span>
-                                    <span class="date-month">OCT</span>
-                                </div>
+                                <div class="appointment-icon">👨‍⚕️</div>
                                 <div class="appointment-details">
                                     <h5>Dr. Emily Chen</h5>
-                                    <p>Cardiologist · 10:00 AM</p>
-                                    <span class="appointment-location">City Medical Center</span>
+                                    <p>Cardiologist</p>
+                                    <span class="appointment-location">📞 (555) 123-4567</span>
+                                    <span class="appointment-location">✉️ e.chen@medical.com</span>
                                 </div>
-                                <button class="appointment-action">View</button>
+                                <button class="appointment-action">Edit</button>
                             </div>
                             <div class="appointment-item">
-                                <div class="appointment-date">
-                                    <span class="date-day">25</span>
-                                    <span class="date-month">OCT</span>
-                                </div>
+                                <div class="appointment-icon">👨‍⚕️</div>
                                 <div class="appointment-details">
                                     <h5>Dr. Michael Roberts</h5>
-                                    <p>Endocrinologist · 2:30 PM</p>
-                                    <span class="appointment-location">Westside Clinic</span>
+                                    <p>Endocrinologist</p>
+                                    <span class="appointment-location">📞 (555) 987-6543</span>
+                                    <span class="appointment-location">✉️ m.roberts@clinic.com</span>
                                 </div>
-                                <button class="appointment-action">View</button>
+                                <button class="appointment-action">Edit</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Health Progress -->
+                    <!-- Adherence Summary -->
                     <div class="content-card">
                         <div class="card-header">
-                            <h3>Health Progress</h3>
-                            <a href="#" class="view-all">See Details</a>
+                            <h3>Weekly Adherence</h3>
+                            <a href="#" class="view-all" data-section="adherence">Full Report</a>
                         </div>
                         <div class="health-progress">
                             <div class="progress-item">
                                 <div class="progress-info">
-                                    <span class="progress-label">Medication Adherence</span>
+                                    <span class="progress-label">This Week</span>
                                     <span class="progress-value">92%</span>
                                 </div>
                                 <div class="progress-bar">
@@ -224,20 +210,20 @@
                             </div>
                             <div class="progress-item">
                                 <div class="progress-info">
-                                    <span class="progress-label">Appointment Attendance</span>
-                                    <span class="progress-value">100%</span>
+                                    <span class="progress-label">Last Week</span>
+                                    <span class="progress-value">89%</span>
                                 </div>
                                 <div class="progress-bar">
-                                    <div class="progress-fill excellent"></div>
+                                    <div class="progress-fill good"></div>
                                 </div>
                             </div>
                             <div class="progress-item">
                                 <div class="progress-info">
-                                    <span class="progress-label">Symptom Tracking</span>
-                                    <span class="progress-value">75%</span>
+                                    <span class="progress-label">This Month</span>
+                                    <span class="progress-value">90%</span>
                                 </div>
                                 <div class="progress-bar">
-                                    <div class="progress-fill good"></div>
+                                    <div class="progress-fill excellent"></div>
                                 </div>
                             </div>
                         </div>

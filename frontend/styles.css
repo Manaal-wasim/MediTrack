@@ -1082,9 +1082,9 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 250px;
+    width: 220px;
     background: linear-gradient(to bottom, var(--light-pink), var(--light-purple));
-    padding: 20px 0;
+    padding: 15px 0;
     box-shadow: 2px 0 10px var(--shadow);
     z-index: 100;
 }
@@ -1092,23 +1092,23 @@ body {
 .logo {
     display: flex;
     align-items: center;
-    padding: 0 20px 20px;
+    padding: 0 15px 15px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .logo h1 {
-    color: var(--dark-purple);
     font-size: 1.8rem;
     margin-left: 10px;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--medium-pink), var(--dark-purple)); 
-    -webkit-background-clip: text; /* ADD THIS LINE */
-    -webkit-text-fill-color: transparent; /* ADD THIS LINE */
-    background-clip: text; /* ADD THIS LINE */
 }
 
+.logo-medi {
+    color: #7B4F9B !important;
+}
 
+.logo-track {
+    color: #E8A0B8 !important;
 }
 
 .logo-icon {
@@ -1118,23 +1118,23 @@ body {
 
 .nav-links {
     list-style: none;
-    padding: 0 15px;
+    padding: 0 12px;
 }
 
 .nav-links li {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .nav-links a {
     display: flex;
     align-items: center;
-    padding: 12px 15px;
+    padding: 10px 12px;
     text-decoration: none;
     color: var(--text-dark);
     border-radius: 8px;
     transition: all 0.3s ease;
     cursor: pointer;
-    font-weight: 600; 
+    font-weight: 600;
 }
 
 .nav-links a:hover, .nav-links a.active {
@@ -1169,7 +1169,7 @@ body {
     color: var(--dark-purple);
     font-weight: 600;
     margin-bottom: 5px;
-     font-size: 2rem;
+    font-size: 2rem;
 }
 
 #current-date-display {
@@ -1413,6 +1413,14 @@ body {
     font-size: 0.8rem;
 }
 
+.med-notes {
+    font-size: 0.75rem;
+    color: var(--text-medium);
+    font-style: italic;
+    margin-top: 2px;
+    display: block;
+}
+
 .status-btn {
     padding: 6px 12px;
     border: none;
@@ -1501,26 +1509,16 @@ body {
     transform: translateX(5px);
 }
 
-.appointment-date {
+.appointment-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    background: var(--white);
-    padding: 8px;
-    border-radius: 6px;
-    min-width: 50px;
-}
-
-.date-day {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--dark-purple);
-}
-
-.date-month {
-    font-size: 0.7rem;
-    color: var(--text-medium);
-    text-transform: uppercase;
+    justify-content: center;
+    background: var(--light-purple);
+    border-radius: 8px;
+    flex-shrink: 0;
 }
 
 .appointment-details {
@@ -1542,7 +1540,7 @@ body {
 .appointment-location {
     font-size: 0.75rem;
     color: var(--text-medium);
-    font-style: italic;
+    display: block;
 }
 
 .appointment-action {
@@ -1613,7 +1611,48 @@ body {
 
 .progress-fill.good {
     background: #8BC34A;
-    width: 75%;
+    width: 89%;
+}
+
+/* Motivational Quotes */
+.motivational-quotes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quote-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--light-purple);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.quote-item:hover {
+    background: var(--medium-purple);
+    transform: translateX(3px);
+}
+
+.quote-icon {
+    font-size: 1.2rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.quote-content p {
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    line-height: 1.4;
+    font-style: italic;
 }
 
 /* Toast Notification */
@@ -1686,72 +1725,4 @@ body {
     .status-btn {
         align-self: flex-end;
     }
-
-}
-/* Reduce sidebar spacing */
-.sidebar {
-    width: 220px; /* Reduced from 250px */
-    padding: 15px 0; /* Reduced from 20px 0 */
-}
-
-.nav-links {
-    padding: 0 12px; /* Reduced from 15px */
-}
-
-.nav-links li {
-    margin-bottom: 6px; /* Reduced from 10px */
-}
-
-.nav-links a {
-    padding: 10px 12px; /* Reduced from 12px 15px */
-    font-size: 0.9rem; /* Slightly smaller text */
-}
-
-.logo {
-    padding: 0 15px 15px; /* Reduced from 0 20px 20px */
-    margin-bottom: 15px; /* Reduced from 20px */
-}
-
-.logo h1 {
-    font-size: 1.3rem; /* Reduced from 1.5rem */
-}
-/* Motivational Quotes */
-.motivational-quotes {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.quote-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
-    background: var(--light-purple);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.quote-item:hover {
-    background: var(--medium-purple);
-    transform: translateX(3px);
-}
-
-.quote-icon {
-    font-size: 1.2rem;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.quote-content p {
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    line-height: 1.4;
-    font-style: italic;
 }
