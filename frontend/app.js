@@ -1,57 +1,374 @@
-// Function to toggle password visibility
-document.querySelectorAll('.toggle-password').forEach(toggle => {
-    toggle.addEventListener('click', () => {
-        const passwordInput = toggle.previousElementSibling;
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggle.innerHTML = '<i class="fas fa-eye-slash" style="top: 74%; "></i>';
-        } else {
-            passwordInput.type = 'password';
-            toggle.innerHTML = '<i class="fas fa-eye"></i>';
-        }
-    });
+// Mock data - This would come from your Python backend in a real application
+let medicines = [
+    {
+        id: 1,
+        name: "Aspirin",
+        dosage: "100mg",
+        time: "08:00",
+        frequency: "once",
+        notes: "Take after breakfast",
+        status: "taken"
+    },
+    {
+        id: 2,
+        name: "Vitamin D",
+        dosage: "1000 IU",
+        time: "12:00",
+        frequency: "once",
+        notes: "With lunch",
+        status: "upcoming"
+    },
+    {
+        id: 3,
+        name: "Blood Pressure Medication",
+        dosage: "10mg",
+        time: "20:00",
+        frequency: "once",
+        notes: "",
+        status: "upcoming"
+    }
+];
+
+// DOM Elements - declare them but don't assign yet
+let medicineList, emptyState, addMedicineBtn, addMedicineEmptyBtn, medicineModal, closeModalBtn, cancelBtn, medicineForm, notification;
+let editingMedicineId = null;
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function () {
+    // Initialize medicine tracker if we're on the medicine page
+    initMedicineTracker();
+    initPasswordToggle();
+    initAuthForms();
+    initSmoothScrolling();
 });
 
-// Login Form Handling
-const loginForm = document.querySelector('.auth-form');
-if (loginForm && window.location.pathname.includes('login.html')) {
-    loginForm.addEventListener('submit', e => {
-        e.preventDefault(); // Prevent default form submission
+function initMedicineTracker() {
+    // Get DOM elements for medicine tracker
+    medicineList = document.getElementById('medicineList');
+    emptyState = document.getElementById('emptyState');
+    addMedicineBtn = document.getElementById('addMedicineBtn');
+    addMedicineEmptyBtn = document.getElementById('addMedicineEmptyBtn');
+    medicineModal = document.getElementById('medicineModal');
+    closeModalBtn = document.getElementById('closeModalBtn');
+    cancelBtn = document.getElementById('cancelBtn');
+    medicineForm = document.getElementById('medicineForm');
+    notification = document.getElementById('notification');
 
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
+    // Check if we're on a page that has medicine tracker elements
+    if (!medicineList) {
+        console.log('Medicine tracker not on this page');
+        return;
+    }
 
-        if (!email || !password) {
-            alert('Please fill in all fields.');
-            return;
-        }
+    renderMedicineList();
 
-        // TODO: Replace with actual login API call
+    // Event Listeners
+    if (addMedicineBtn) addMedicineBtn.addEventListener('click', openModal);
+    if (addMedicineEmptyBtn) addMedicineEmptyBtn.addEventListener('click', openModal);
+    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (medicineForm) medicineForm.addEventListener('submit', handleFormSubmit);
+
+    // Close modal when clicking outside
+    if (medicineModal) {
+        medicineModal.addEventListener('click', function (e) {
+            if (e.target === medicineModal) {
+                closeModal();
+            }
+        });
+    }
+}
+
+function initPasswordToggle() {
+    // Function to toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const passwordInput = toggle.previousElementSibling;
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash" style="top: 74%; "></i>';
+            } else {
+                passwordInput.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
     });
 }
 
-// Signup Form Handling
-if (loginForm && window.location.pathname.includes('signup.html')) {
-    loginForm.addEventListener('submit', e => {
-        e.preventDefault(); // Prevent default form submission
+function initAuthForms() {
+    // Login Form Handling
+    const loginForm = document.querySelector('.auth-form');
+    if (loginForm && window.location.pathname.includes('login.html')) {
+        loginForm.addEventListener('submit', e => {
+            e.preventDefault(); // Prevent default form submission
 
-        const fullname = document.getElementById('fullname').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-        if (!fullname || !email || !password || !confirmPassword) {
-            alert('Please fill in all required fields.');
-            return;
-        }
+            if (!email || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
 
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            return;
-        }
+            // TODO: Replace with actual login API call
+        });
+    }
 
-        // TODO: Replace with actual signup API call
+    // Signup Form Handling
+    if (loginForm && window.location.pathname.includes('signup.html')) {
+        loginForm.addEventListener('submit', e => {
+            e.preventDefault(); // Prevent default form submission
+
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+            if (!fullname || !email || !password || !confirmPassword) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // TODO: Replace with actual signup API call
+        });
+    }
+}
+
+function initSmoothScrolling() {
+    // Function to enable smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            // Prevent default anchor link behavior
+            e.preventDefault();
+
+            // Get the ID of the target section (e.g., '#features')
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                // Scroll to the target element smoothly
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
     });
+
+    // Optional: Add a subtle effect to the header on scroll
+    const header = document.getElementById('header');
+    if (header) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            } else {
+                header.style.boxShadow = 'none';
+            }
+        });
+    }
+}
+
+// Medicine tracker functions (keep these the same)
+function renderMedicineList() {
+    // Check if medicineList exists
+    if (!medicineList) return;
+
+    // Clear the list
+    medicineList.innerHTML = '';
+
+    // Check if there are medicines
+    if (medicines.length === 0) {
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Sort medicines by time
+    const sortedMedicines = [...medicines].sort((a, b) => {
+        return a.time.localeCompare(b.time);
+    });
+
+    // Create medicine items
+    sortedMedicines.forEach(medicine => {
+        const li = document.createElement('li');
+        li.className = 'medicine-item';
+
+        // Determine status indicator and class
+        let statusClass, statusIcon;
+        if (medicine.status === 'taken') {
+            statusClass = 'status-taken';
+            statusIcon = 'fas fa-check-circle';
+        } else if (medicine.status === 'upcoming') {
+            statusClass = 'status-upcoming';
+            statusIcon = 'far fa-clock';
+        } else {
+            statusClass = 'status-missed';
+            statusIcon = 'fas fa-exclamation-circle';
+        }
+
+        li.innerHTML = `
+            <div class="medicine-info">
+                <div class="medicine-name">
+                    <i class="fas fa-capsules"></i> ${medicine.name}
+                </div>
+                <div class="medicine-details">
+                    <span class="dosage-badge">
+                        <i class="fas fa-prescription-bottle-alt"></i> ${medicine.dosage}
+                    </span>
+                    <span class="medicine-time">
+                        <i class="far fa-clock"></i> ${formatTime(medicine.time)}
+                    </span>
+                    <span class="status ${statusClass}">
+                        <i class="${statusIcon}"></i>${medicine.status.charAt(0).toUpperCase() + medicine.status.slice(1)}
+                    </span>
+                </div>
+                ${medicine.notes ? `<div class="medicine-notes">${medicine.notes}</div>` : ''}
+            </div>
+            <div class="medicine-actions">
+                <button class="action-btn mark-taken-btn" data-id="${medicine.id}" title="Mark as taken">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="action-btn edit-btn" data-id="${medicine.id}" title="Edit medicine">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete-btn" data-id="${medicine.id}" title="Delete medicine">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+
+        medicineList.appendChild(li);
+    });
+
+    // Add event listeners to action buttons
+    document.querySelectorAll('.mark-taken-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = parseInt(this.getAttribute('data-id'));
+            markMedicineAsTaken(id);
+        });
+    });
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = parseInt(this.getAttribute('data-id'));
+            deleteMedicine(id);
+        });
+    });
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = parseInt(this.getAttribute('data-id'));
+            openEditModal(id);
+        });
+    });
+
+}
+
+function formatTime(timeString) {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function openModal() {
+    if (medicineModal) medicineModal.style.display = 'flex';
+}
+
+function closeModal() {
+    if (medicineModal) medicineModal.style.display = 'none';
+    if (medicineForm) medicineForm.reset();
+}
+
+function handleFormSubmit(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('medicineName').value;
+    const dosage = document.getElementById('dosage').value;
+    const frequency = document.getElementById('frequency').value;
+    const time = document.getElementById('scheduleTime').value;
+    const notes = document.getElementById('notes').value;
+
+    // Create new medicine object
+    const newMedicine = {
+        id: Date.now(), // Simple ID generation - would be handled by backend in real app
+        name,
+        dosage,
+        frequency,
+        time,
+        notes,
+        status: 'upcoming'
+    };
+
+    // In a real application, you would send this to your Python backend
+    // Example: fetch('/api/medicines', { method: 'POST', body: JSON.stringify(newMedicine) })
+
+    // For now, we'll just add it to our local array
+    medicines.push(newMedicine);
+
+    // Re-render the list
+    renderMedicineList();
+
+    // Show success notification
+    showNotification('Medicine added successfully!', 'success');
+
+    // Close the modal
+    closeModal();
+}
+
+function markMedicineAsTaken(id) {
+    const medicine = medicines.find(m => m.id === id);
+    if (medicine) {
+        medicine.status = 'taken';
+        renderMedicineList();
+        showNotification('Medicine marked as taken!', 'success');
+    }
+}
+
+function deleteMedicine(id) {
+    if (confirm('Are you sure you want to delete this medicine?')) {
+        // In a real application, you would send a DELETE request to your Python backend
+        // Example: fetch(`/api/medicines/${id}`, { method: 'DELETE' })
+
+        medicines = medicines.filter(m => m.id !== id);
+        renderMedicineList();
+        showNotification('Medicine deleted successfully!', 'success');
+    }
+}
+
+function showNotification(message, type) {
+    if (!notification) return;
+
+    notification.textContent = message;
+    notification.className = `notification ${type} show`;
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+function openEditModal(id) {
+    const medicine = medicines.find(m => m.id === id);
+    if (!medicine) return;
+
+    editingMedicineId = id;
+
+    // Open the modal
+    openModal();
+
+    // Change the modal title and button text
+    document.getElementById('modalTitle').textContent = 'Edit Medicine';
+    document.getElementById('submitBtn').textContent = 'Update Medicine';
+
+    // Pre-fill the form
+    document.getElementById('medicineName').value = medicine.name;
+    document.getElementById('dosage').value = medicine.dosage;
+    document.getElementById('frequency').value = medicine.frequency;
+    document.getElementById('scheduleTime').value = medicine.time;
+    document.getElementById('notes').value = medicine.notes;
 }
 //---------------- MAIN HOMEPAGE SCRIPT----------------
 // Function to enable smooth scrolling for anchor links
@@ -59,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             // Prevent default anchor link behavior
-            e.preventDefault(); 
+            e.preventDefault();
 
             // Get the ID of the target section (e.g., '#features')
             const targetId = this.getAttribute('href');
@@ -149,12 +466,15 @@ if (window.location.pathname.includes("admin.html")) {
 }
 // -------------user dashboard Script------------------
 // Meditrack Dashboard - Core Functionality Only
-document.addEventListener('DOMContentLoaded', function() {
-    initDashboard();
-    setupNavigation();
-    setupEventListeners();
-    loadMotivationalQuotes();
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.location.pathname.includes("dashboard.html")) {
+        initDashboard();
+        setupNavigation();
+        setupEventListeners();
+        loadMotivationalQuotes();
+    }
 });
+
 
 function initDashboard() {
     const userData = getUserData();
@@ -181,9 +501,9 @@ function updateUserAvatar(name) {
 
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-links a[data-section]');
-    
+
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             navLinks.forEach(nav => nav.classList.remove('active'));
             this.classList.add('active');
@@ -191,8 +511,8 @@ function setupNavigation() {
             showSection(section);
         });
     });
-    
-    document.getElementById('logout-btn').addEventListener('click', function(e) {
+
+    document.getElementById('logout-btn').addEventListener('click', function (e) {
         e.preventDefault();
         if (confirm('Are you sure you want to log out?')) {
             localStorage.removeItem('meditrack-user');
@@ -216,7 +536,7 @@ function showSection(section) {
 function setupEventListeners() {
     // Mark medication as taken/missed
     document.querySelectorAll('.status-btn.pending').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             const medicationName = this.closest('.medication-item').querySelector('h5').textContent;
             this.textContent = 'Taken';
             this.classList.remove('pending');
@@ -228,21 +548,21 @@ function setupEventListeners() {
     });
 
     // Quick actions
-    document.getElementById('add-medication-btn').addEventListener('click', function() {
+    document.getElementById('add-medication-btn').addEventListener('click', function () {
         showToast('Add medication feature opening...');
     });
 
-    document.getElementById('add-doctor-btn').addEventListener('click', function() {
+    document.getElementById('add-doctor-btn').addEventListener('click', function () {
         showToast('Add doctor feature opening...');
     });
 
-    document.getElementById('search-medications-btn').addEventListener('click', function() {
+    document.getElementById('search-medications-btn').addEventListener('click', function () {
         showToast('Search medications by name or filter by time');
     });
 
     // Doctor actions
     document.querySelectorAll('.appointment-action').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             const doctorName = this.closest('.appointment-item').querySelector('h5').textContent;
             showToast(`Editing ${doctorName}'s information`);
         });
@@ -250,7 +570,7 @@ function setupEventListeners() {
 
     // View all links
     document.querySelectorAll('.view-all').forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             const section = this.getAttribute('data-section');
             showSection(section);
@@ -274,7 +594,7 @@ function updateProgressBars() {
 function updateDashboardStats() {
     const medications = JSON.parse(localStorage.getItem('meditrack-medications') || '[]');
     document.getElementById('active-meds-count').textContent = medications.length || 5;
-    
+
     const doctors = JSON.parse(localStorage.getItem('meditrack-doctors') || '[]');
     document.getElementById('doctors-count').textContent = doctors.length || 2;
 }
@@ -286,10 +606,10 @@ function loadMotivationalQuotes() {
         { text: "Small steps every day lead to big results. Keep going!", icon: "🚶‍♂️" },
         { text: "Your commitment to your health is inspiring. You're doing amazing!", icon: "❤️" }
     ];
-    
+
     const shuffledQuotes = quotes.sort(() => 0.5 - Math.random()).slice(0, 2);
     const quoteContainer = document.querySelector('.motivational-quotes');
-    
+
     if (quoteContainer) {
         quoteContainer.innerHTML = shuffledQuotes.map(quote => `
             <div class="quote-item">
@@ -310,13 +630,22 @@ function showToast(message) {
         toast.className = 'toast';
         document.body.appendChild(toast);
     }
-    
+
     toast.innerHTML = `<span>${message}</span>`;
     toast.classList.add('show');
-    
+
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function getUserData() {
     return JSON.parse(localStorage.getItem('meditrack-user') || '{"name": "Sarah Johnson"}');
 }
+document.addEventListener('DOMContentLoaded', () => {
+    const viewScheduleLinks = document.querySelectorAll('a.view-all[data-section="schedule"]');
+    viewScheduleLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = 'medicine_schedule.html';
+        });
+    });
+});
