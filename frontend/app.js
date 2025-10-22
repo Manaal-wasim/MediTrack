@@ -1,3 +1,229 @@
+// ==================== API CONFIGURATION ====================
+const API_BASE_URL = 'http://localhost:5000';
+
+// API Functions for backend communication
+async function apiSignup(userData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Signup error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function apiLogin(email, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Login error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function checkAuth() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/check-auth`);
+        const data = await response.json();
+        
+        if (data.authenticated) {
+            return data.user;
+        }
+        return null;
+    } catch (error) {
+        console.error('Auth check error:', error);
+        return null;
+    }
+}
+
+async function apiLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/logout`, { method: 'POST' });
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+// ==================== AUTH FORMS ====================
+function initAuthForms() {
+    console.log("initAuthForms called - setting up form handlers");
+    
+    // Login Form Handling
+    const loginForm = document.querySelector('.auth-form');
+    if (loginForm && window.location.pathname.includes('login.html')) {
+        console.log("Setting up login form handler");
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("Login form submitted");
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Logging in...';
+            submitBtn.disabled = true;
+
+            // Use the API function
+            const result = await apiLogin(email, password);
+            
+            if (result.success) {
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(result.data.user));
+                alert('Login successful!');
+                
+                // Redirect based on role
+                if (result.data.user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'user dashboard.html';
+                }
+            } else {
+                alert(result.data.error || 'Login failed');
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // Signup Form Handling
+    if (loginForm && window.location.pathname.includes('signup.html')) {
+        console.log("Setting up signup form handler");
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("Signup form submitted");
+
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const age = document.getElementById('age')?.value;
+            const gender = document.getElementById('gender')?.value;
+            const contact = document.getElementById('contact')?.value;
+
+            if (!fullname || !email || !password || !confirmPassword) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+
+            const formData = {
+                name: fullname,
+                email: email,
+                password: password,
+                age: age || null,
+                gender: gender || null,
+                contact: contact || null,
+                role: 'client'
+            };
+
+            console.log("Sending signup data:", formData);
+
+            // Use the API function
+            const result = await apiSignup(formData);
+            
+            if (result.success) {
+                alert('Account created successfully! Please login.');
+                window.location.href = 'login.html';
+            } else {
+                alert(result.data.error || 'Signup failed');
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+    }
+}
+
+// ==================== PASSWORD TOGGLE ====================
+function initPasswordToggle() {
+    // Function to toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const passwordInput = toggle.previousElementSibling;
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash" style="top: 74%; "></i>';
+            } else {
+                passwordInput.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+    });
+}
+
+// ==================== SMOOTH SCROLLING ====================
+function initSmoothScrolling() {
+    // Function to enable smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            // Prevent default anchor link behavior
+            e.preventDefault();
+
+            // Get the ID of the target section (e.g., '#features')
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                // Scroll to the target element smoothly
+                targetElement.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+
+    // Optional: Add a subtle effect to the header on scroll
+    const header = document.getElementById('header');
+    if (header) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                header.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            } else {
+                header.style.boxShadow = 'none';
+            }
+        });
+    }
+}
+
+// ==================== MEDICINE TRACKER ====================
 // Mock data - This would come from your Python backend in a real application
 let medicines = [
     {
@@ -32,14 +258,6 @@ let medicines = [
 // DOM Elements - declare them but don't assign yet
 let medicineList, emptyState, addMedicineBtn, addMedicineEmptyBtn, medicineModal, closeModalBtn, cancelBtn, medicineForm, notification;
 let editingMedicineId = null;
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize medicine tracker if we're on the medicine page
-    initMedicineTracker();
-    initPasswordToggle();
-    initAuthForms();
-    initSmoothScrolling();
-});
 
 function initMedicineTracker() {
     // Get DOM elements for medicine tracker
@@ -78,100 +296,6 @@ function initMedicineTracker() {
     }
 }
 
-function initPasswordToggle() {
-    // Function to toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const passwordInput = toggle.previousElementSibling;
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                toggle.innerHTML = '<i class="fas fa-eye-slash" style="top: 74%; "></i>';
-            } else {
-                passwordInput.type = 'password';
-                toggle.innerHTML = '<i class="fas fa-eye"></i>';
-            }
-        });
-    });
-}
-
-function initAuthForms() {
-    // Login Form Handling
-    const loginForm = document.querySelector('.auth-form');
-    if (loginForm && window.location.pathname.includes('login.html')) {
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault(); // Prevent default form submission
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            if (!email || !password) {
-                alert('Please fill in all fields.');
-                return;
-            }
-
-            // TODO: Replace with actual login API call
-        });
-    }
-
-    // Signup Form Handling
-    if (loginForm && window.location.pathname.includes('signup.html')) {
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault(); // Prevent default form submission
-
-            const fullname = document.getElementById('fullname').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const confirmPassword = document.getElementById('confirm-password').value.trim();
-
-            if (!fullname || !email || !password || !confirmPassword) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                alert('Passwords do not match!');
-                return;
-            }
-
-            // TODO: Replace with actual signup API call
-        });
-    }
-}
-
-function initSmoothScrolling() {
-    // Function to enable smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            // Prevent default anchor link behavior
-            e.preventDefault();
-
-            // Get the ID of the target section (e.g., '#features')
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-
-            if (targetElement) {
-                // Scroll to the target element smoothly
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Optional: Add a subtle effect to the header on scroll
-    const header = document.getElementById('header');
-    if (header) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                header.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-            } else {
-                header.style.boxShadow = 'none';
-            }
-        });
-    }
-}
-
-// Medicine tracker functions (keep these the same)
 function renderMedicineList() {
     // Check if medicineList exists
     if (!medicineList) return;
@@ -350,6 +474,7 @@ function showNotification(message, type) {
         notification.classList.remove('show');
     }, 3000);
 }
+
 function openEditModal(id) {
     const medicine = medicines.find(m => m.id === id);
     if (!medicine) return;
@@ -370,118 +495,19 @@ function openEditModal(id) {
     document.getElementById('scheduleTime').value = medicine.time;
     document.getElementById('notes').value = medicine.notes;
 }
-//---------------- MAIN HOMEPAGE SCRIPT----------------
-// Function to enable smooth scrolling for anchor links
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            // Prevent default anchor link behavior
-            e.preventDefault();
 
-            // Get the ID of the target section (e.g., '#features')
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-
-            if (targetElement) {
-                // Scroll to the target element smoothly
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Optional: Add a subtle effect to the header on scroll
-    const header = document.getElementById('header');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-        } else {
-            header.style.boxShadow = 'none';
-        }
-    });
-});
-// -------------------- ADMIN DASHBOARD SCRIPT --------------------
-
-// Only run this code on the admin dashboard page
-if (window.location.pathname.includes("admin.html")) {
-
-    // Sidebar navigation handling
-    const navLinks = document.querySelectorAll('.sidebar ul li');
-    const sections = document.querySelectorAll('.main-content section');
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            // Remove active state from all links
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-
-            // Show corresponding section
-            const targetId = link.dataset.target;
-            sections.forEach(section => {
-                section.style.display = (section.id === targetId) ? 'block' : 'none';
-            });
-        });
-    });
-
-    // Example: Delete user (just for frontend demo)
-    document.querySelectorAll('.delete-user-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const row = btn.closest('tr');
-            if (confirm("Are you sure you want to delete this user?")) {
-                row.remove();
-                alert("User deleted!");
-            }
-        });
-    });
-
-    // Example: Add advertisement
-    const adForm = document.getElementById('ad-form');
-    if (adForm) {
-        adForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const adTitle = document.getElementById('ad-title').value.trim();
-            const adDesc = document.getElementById('ad-desc').value.trim();
-
-            if (!adTitle || !adDesc) {
-                alert("Please fill out all fields.");
-                return;
-            }
-
-            alert(`Advertisement "${adTitle}" added successfully!`);
-            adForm.reset();
-        });
-    }
-
-    // Example: Display simple stats dynamically
-    const totalUsers = document.getElementById('total-users');
-    const activeAds = document.getElementById('active-ads');
-    const dbEntries = document.getElementById('db-entries');
-
-    if (totalUsers && activeAds && dbEntries) {
-        totalUsers.textContent = "126";
-        activeAds.textContent = "18";
-        dbEntries.textContent = "547";
-    }
+// ==================== USER DASHBOARD ====================
+function getUserData() {
+    return JSON.parse(localStorage.getItem('user') || '{}');
 }
-// -------------user dashboard Script------------------
-// Meditrack Dashboard - Core Functionality Only
-document.addEventListener('DOMContentLoaded', function () {
-    if (window.location.pathname.includes("dashboard.html")) {
-        initDashboard();
-        setupNavigation();
-        setupEventListeners();
-        loadMotivationalQuotes();
-    }
-});
-
-
 
 function initDashboard() {
     const userData = getUserData();
-    document.getElementById('welcome-message').textContent = `Welcome back, Sarah Johnson!`;
-    document.getElementById('username').textContent = userData.name || 'User';
-    updateUserAvatar(userData.name);
+    const userName = userData.name || 'User';
+    
+    document.getElementById('welcome-message').textContent = `Welcome back, ${userName}!`;
+    document.getElementById('username').textContent = userName;
+    updateUserAvatar(userName);
     updateCurrentDate();
     updateDashboardStats();
 }
@@ -516,7 +542,7 @@ function setupNavigation() {
     document.getElementById('logout-btn').addEventListener('click', function (e) {
         e.preventDefault();
         if (confirm('Are you sure you want to log out?')) {
-            localStorage.removeItem('meditrack-user');
+            localStorage.removeItem('user');
             window.location.href = 'login.html';
         }
     });
@@ -638,17 +664,89 @@ function showToast(message) {
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-function getUserData() {
-    return JSON.parse(localStorage.getItem('meditrack-user') || '{"name": "Sarah Johnson"}');
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const viewScheduleLinks = document.querySelectorAll('a.view-all[data-section="schedule"]');
-    viewScheduleLinks.forEach(link => {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = 'medicine_schedule.html';
+// ==================== ADMIN DASHBOARD ====================
+// Only run this code on the admin dashboard page
+if (window.location.pathname.includes("admin.html")) {
+
+    // Sidebar navigation handling
+    const navLinks = document.querySelectorAll('.sidebar ul li');
+    const sections = document.querySelectorAll('.main-content section');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            // Remove active state from all links
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+
+            // Show corresponding section
+            const targetId = link.dataset.target;
+            sections.forEach(section => {
+                section.style.display = (section.id === targetId) ? 'block' : 'none';
+            });
         });
     });
+
+    // Example: Delete user (just for frontend demo)
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = btn.closest('tr');
+            if (confirm("Are you sure you want to delete this user?")) {
+                row.remove();
+                alert("User deleted!");
+            }
+        });
+    });
+
+    // Example: Add advertisement
+    const adForm = document.getElementById('ad-form');
+    if (adForm) {
+        adForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const adTitle = document.getElementById('ad-title').value.trim();
+            const adDesc = document.getElementById('ad-desc').value.trim();
+
+            if (!adTitle || !adDesc) {
+                alert("Please fill out all fields.");
+                return;
+            }
+
+            alert(`Advertisement "${adTitle}" added successfully!`);
+            adForm.reset();
+        });
+    }
+
+    // Example: Display simple stats dynamically
+    const totalUsers = document.getElementById('total-users');
+    const activeAds = document.getElementById('active-ads');
+    const dbEntries = document.getElementById('db-entries');
+
+    if (totalUsers && activeAds && dbEntries) {
+        totalUsers.textContent = "126";
+        activeAds.textContent = "18";
+        dbEntries.textContent = "547";
+    }
+}
+
+// ==================== MAIN INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("=== DEBUG: Page loaded ===");
+    console.log("Current page:", window.location.pathname);
+    
+    // Initialize everything
+    initMedicineTracker();
+    initPasswordToggle();
+    initAuthForms();
+    initSmoothScrolling();
+
+    // User Dashboard Initialization
+    if (window.location.pathname.includes("dashboard.html")) {
+        initDashboard();
+        setupNavigation();
+        setupEventListeners();
+        loadMotivationalQuotes();
+    }
+
+    // Schedule Links
     const scheduleLinks = document.querySelectorAll('a[data-section="schedule"], a.view-all[data-section="schedule"]');
     scheduleLinks.forEach(link => {
         link.addEventListener('click', function(e) {
