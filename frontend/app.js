@@ -1,4 +1,70 @@
 // Mock data - This would come from your Python backend in a real application
+// ==================== API CONFIGURATION ====================
+const API_BASE_URL = 'http://localhost:5000';
+
+// API Functions for backend communication
+async function apiSignup(userData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Signup error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function apiLogin(email, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Login error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function checkAuth() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/check-auth`);
+        const data = await response.json();
+        
+        if (data.authenticated) {
+            return data.user;
+        }
+        return null;
+    } catch (error) {
+        console.error('Auth check error:', error);
+        return null;
+    }
+}
+
+async function apiLogout() {
+    try {
+        await fetch(`${API_BASE_URL}/logout`, { method: 'POST' });
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+// ==================== END API CONFIGURATION ====================
+
 let medicines = [
     {
         id: 1,
@@ -94,12 +160,59 @@ function initPasswordToggle() {
     });
 }
 
+// function initAuthForms() {
+//     // Login Form Handling
+//     const loginForm = document.querySelector('.auth-form');
+//     if (loginForm && window.location.pathname.includes('login.html')) {
+//         loginForm.addEventListener('submit', e => {
+//             e.preventDefault(); // Prevent default form submission
+
+//             const email = document.getElementById('email').value.trim();
+//             const password = document.getElementById('password').value.trim();
+
+//             if (!email || !password) {
+//                 alert('Please fill in all fields.');
+//                 return;
+//             }
+
+//             // TODO: Replace with actual login API call
+//         });
+//     }
+
+//     // Signup Form Handling
+//     if (loginForm && window.location.pathname.includes('signup.html')) {
+//         loginForm.addEventListener('submit', e => {
+//             e.preventDefault(); // Prevent default form submission
+
+//             const fullname = document.getElementById('fullname').value.trim();
+//             const email = document.getElementById('email').value.trim();
+//             const password = document.getElementById('password').value.trim();
+//             const confirmPassword = document.getElementById('confirm-password').value.trim();
+
+//             if (!fullname || !email || !password || !confirmPassword) {
+//                 alert('Please fill in all required fields.');
+//                 return;
+//             }
+
+//             if (password !== confirmPassword) {
+//                 alert('Passwords do not match!');
+//                 return;
+//             }
+
+//             // TODO: Replace with actual signup API call
+//         });
+//     }
+// }
 function initAuthForms() {
+    console.log("initAuthForms called - setting up form handlers");
+    
     // Login Form Handling
     const loginForm = document.querySelector('.auth-form');
     if (loginForm && window.location.pathname.includes('login.html')) {
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault(); // Prevent default form submission
+        console.log("Setting up login form handler");
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("Login form submitted");
 
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -109,19 +222,49 @@ function initAuthForms() {
                 return;
             }
 
-            // TODO: Replace with actual login API call
+            // Show loading state
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Logging in...';
+            submitBtn.disabled = true;
+
+            // Use the API function
+            const result = await apiLogin(email, password);
+            
+            if (result.success) {
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(result.data.user));
+                alert('Login successful!');
+                
+                // Redirect based on role
+                if (result.data.user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'user dashboard.html';
+                }
+            } else {
+                alert(result.data.error || 'Login failed');
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
         });
     }
 
     // Signup Form Handling
     if (loginForm && window.location.pathname.includes('signup.html')) {
-        loginForm.addEventListener('submit', e => {
-            e.preventDefault(); // Prevent default form submission
+        console.log("Setting up signup form handler");
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            console.log("Signup form submitted");
 
             const fullname = document.getElementById('fullname').value.trim();
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             const confirmPassword = document.getElementById('confirm-password').value.trim();
+            const age = document.getElementById('age')?.value;
+            const gender = document.getElementById('gender')?.value;
+            const contact = document.getElementById('contact')?.value;
 
             if (!fullname || !email || !password || !confirmPassword) {
                 alert('Please fill in all required fields.');
@@ -133,11 +276,39 @@ function initAuthForms() {
                 return;
             }
 
-            // TODO: Replace with actual signup API call
+            // Show loading state
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+
+            const formData = {
+                name: fullname,
+                email: email,
+                password: password,
+                age: age || null,
+                gender: gender || null,
+                contact: contact || null,
+                role: 'client'
+            };
+
+            console.log("Sending signup data:", formData);
+
+            // Use the API function
+            const result = await apiSignup(formData);
+            
+            if (result.success) {
+                alert('Account created successfully! Please login.');
+                window.location.href = 'login.html';
+            } else {
+                alert(result.data.error || 'Signup failed');
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
         });
     }
 }
-
 function initSmoothScrolling() {
     // Function to enable smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -477,26 +648,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 function initDashboard() {
-    const userData = getUserData();
-    document.getElementById('welcome-message').textContent = `Welcome back, Sarah Johnson!`;
-    document.getElementById('username').textContent = userData.name || 'User';
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userName = userData.name || 'User';
+    document.getElementById('welcome-message').textContent = `Welcome back, ${userName}!`;
+    document.getElementById('username').textContent = userName;
     updateUserAvatar(userData.name);
     updateCurrentDate();
     updateDashboardStats();
 }
-
+function updateUserAvatar(name) {
+    const avatar = document.querySelector('.avatar-placeholder');
+    if (name) {
+        // Get initials from the name (first letter of first and last name)
+        const names = name.split(' ');
+        let initials = '';
+        if (names.length > 0) {
+            initials += names[0][0].toUpperCase(); // First name initial
+        }
+        if (names.length > 1) {
+            initials += names[names.length - 1][0].toUpperCase(); // Last name initial
+        }
+        avatar.textContent = initials;
+    }
+}
 function updateCurrentDate() {
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('current-date-display').textContent = `Today is ${now.toLocaleDateString('en-US', options)}`;
-}
-
-function updateUserAvatar(name) {
-    const avatar = document.querySelector('.avatar-placeholder');
-    if (name) {
-        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-        avatar.textContent = initials;
-    }
 }
 
 function setupNavigation() {

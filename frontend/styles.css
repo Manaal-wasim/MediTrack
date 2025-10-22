@@ -99,6 +99,37 @@ body {
     justify-content: center;
     font-size: 0.9rem;
 }
+/* Add this to your existing styles.css file */
+
+.auth-container-signup {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.auth-form-section-signup {
+    overflow-y: auto;
+    max-height: 100vh;
+    padding-right: 10px;
+}
+
+/* Scrollbar styling for webkit browsers (Chrome, Safari, Edge) */
+.auth-form-section-signup::-webkit-scrollbar {
+    width: 6px;
+}
+
+.auth-form-section-signup::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.auth-form-section-signup::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.auth-form-section-signup::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
 
 .auth-header {
     text-align: center;
@@ -296,6 +327,7 @@ body {
 .gradient-text {
     background: linear-gradient(to right, var(--color-secondary), var(--color-primary));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     color: var(--color-primary);
     /* Fallback */
