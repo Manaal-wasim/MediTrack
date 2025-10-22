@@ -476,6 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+
 function initDashboard() {
     const userData = getUserData();
     document.getElementById('welcome-message').textContent = `Welcome back, Sarah Johnson!`;
