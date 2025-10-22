@@ -648,4 +648,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'medicine_schedule.html';
         });
     });
+    const scheduleLinks = document.querySelectorAll('a[data-section="schedule"], a.view-all[data-section="schedule"]');
+    scheduleLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'medicine_schedule_overall.html';
+        });
+    });
 });
