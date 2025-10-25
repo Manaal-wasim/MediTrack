@@ -54,16 +54,143 @@ async function checkAuth() {
     }
 }
 
-async function apiLogout() {
+// ==================== MEDICATION API FUNCTIONS ====================//
+
+async function apiGetMedications() {
     try {
-        await fetch(`${API_BASE_URL}/logout`, { method: 'POST' });
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const response = await fetch(`${API_BASE_URL}/api/medications`, {
+            method: 'GET', 
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`  // FIXED: user.user_id not user.user
+            }
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
     } catch (error) {
-        console.error('Logout error:', error);
+        console.error('Get medications error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
     }
 }
 
+async function apiGetMonthlyMedications(year, month) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const response = await fetch(`${API_BASE_URL}/api/medications/monthly?year=${year}&month=${month}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`  // FIXED: user.user_id not user.user
+            }
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Get monthly medications error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function apiGetTodayMedications() {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const response = await fetch(`${API_BASE_URL}/api/medications/today`, {
+            method: 'GET', 
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`  // FIXED: user.user_id not user.user
+            }
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Get today medications error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+async function apiAddMedication(medicationData) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch(`${API_BASE_URL}/api/medications`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.user_id}`  // ADD THIS LINE
+            },
+            body: JSON.stringify(medicationData)
+            // Remove credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Add medication error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+async function apiUpdateMedication(medicineId, medicationData) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch(`${API_BASE_URL}/api/medications/${medicineId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.user_id}`  // ADD THIS LINE
+            },
+            body: JSON.stringify(medicationData)
+            // Remove credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Update medication error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+async function apiDeleteMedication(medicineId) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch(`${API_BASE_URL}/api/medications/${medicineId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`  // ADD THIS LINE
+            }
+            // Remove credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Delete medication error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+async function apiUpdateMedicationStatus(medicineId, status) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        const response = await fetch(`${API_BASE_URL}/api/medications/${medicineId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user.user_id}`  // ADD THIS LINE
+            },
+            body: JSON.stringify({ status })
+            // Remove credentials: 'include'
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Update medication status error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
 // ==================== AUTH FORMS ====================
 function initAuthForms() {
     console.log("initAuthForms called - setting up form handlers");
@@ -224,40 +351,11 @@ function initSmoothScrolling() {
 }
 
 // ==================== MEDICINE TRACKER ====================
-// Mock data - This would come from your Python backend in a real application
-let medicines = [
-    {
-        id: 1,
-        name: "Aspirin",
-        dosage: "100mg",
-        time: "08:00",
-        frequency: "once",
-        notes: "Take after breakfast",
-        status: "taken"
-    },
-    {
-        id: 2,
-        name: "Vitamin D",
-        dosage: "1000 IU",
-        time: "12:00",
-        frequency: "once",
-        notes: "With lunch",
-        status: "upcoming"
-    },
-    {
-        id: 3,
-        name: "Blood Pressure Medication",
-        dosage: "10mg",
-        time: "20:00",
-        frequency: "once",
-        notes: "",
-        status: "upcoming"
-    }
-];
+let medicines = [];
+let editingMedicineId = null;
 
 // DOM Elements - declare them but don't assign yet
 let medicineList, emptyState, addMedicineBtn, addMedicineEmptyBtn, medicineModal, closeModalBtn, cancelBtn, medicineForm, notification;
-let editingMedicineId = null;
 
 function initMedicineTracker() {
     // Get DOM elements for medicine tracker
@@ -277,7 +375,7 @@ function initMedicineTracker() {
         return;
     }
 
-    renderMedicineList();
+    loadMedications();
 
     // Event Listeners
     if (addMedicineBtn) addMedicineBtn.addEventListener('click', openModal);
@@ -293,6 +391,34 @@ function initMedicineTracker() {
                 closeModal();
             }
         });
+    }
+}
+
+async function loadMedications() {
+    let result;
+    
+    // Check if we're on the today's schedule page
+    if (window.location.pathname.includes('medicine_schedule') || 
+        document.querySelector('.medicine-tracker-body')) {
+        console.log(' Loading today medications...');
+        // Load only today's medications
+        result = await apiGetTodayMedications();
+    } else {
+        // Load all medications (for other pages)
+        console.log('📋 Loading all medications...');
+        result = await apiGetMedications();
+    }
+    console.log('API Response:', result);
+    
+    if (result.success) {
+        medicines = result.data.medications || [];
+        console.log(`💊 Loaded ${medicines.length} medications`);
+        renderMedicineList();
+    } else {
+        console.error('❌ API Error:', result.data.error);
+        showNotification('Failed to load medications',  + (result.data.error || 'Unknown error'), 'error');
+        medicines = [];
+        renderMedicineList();
     }
 }
 
@@ -321,17 +447,20 @@ function renderMedicineList() {
         const li = document.createElement('li');
         li.className = 'medicine-item';
 
-        // Determine status indicator and class
-        let statusClass, statusIcon;
-        if (medicine.status === 'taken') {
+        // Map database status to frontend status
+        let statusClass, statusIcon, displayStatus;
+        if (medicine.status === 'Completed' || medicine.status === 'taken') {
             statusClass = 'status-taken';
             statusIcon = 'fas fa-check-circle';
-        } else if (medicine.status === 'upcoming') {
+            displayStatus = 'Taken';
+        } else if (medicine.status === 'Pending' || medicine.status === 'upcoming') {
             statusClass = 'status-upcoming';
             statusIcon = 'far fa-clock';
+            displayStatus = 'Upcoming';
         } else {
             statusClass = 'status-missed';
             statusIcon = 'fas fa-exclamation-circle';
+            displayStatus = 'Missed';
         }
 
         li.innerHTML = `
@@ -347,7 +476,7 @@ function renderMedicineList() {
                         <i class="far fa-clock"></i> ${formatTime(medicine.time)}
                     </span>
                     <span class="status ${statusClass}">
-                        <i class="${statusIcon}"></i>${medicine.status.charAt(0).toUpperCase() + medicine.status.slice(1)}
+                        <i class="${statusIcon}"></i>${displayStatus}
                     </span>
                 </div>
                 ${medicine.notes ? `<div class="medicine-notes">${medicine.notes}</div>` : ''}
@@ -382,33 +511,26 @@ function renderMedicineList() {
             deleteMedicine(id);
         });
     });
+    
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const id = parseInt(this.getAttribute('data-id'));
             openEditModal(id);
         });
     });
-
 }
 
 function formatTime(timeString) {
-    const [hours, minutes] = timeString.split(':');
+    // Handle both "HH:MM:SS" and "YYYY-MM-DD HH:MM:SS" formats
+    const timePart = timeString.includes(' ') ? timeString.split(' ')[1] : timeString;
+    const [hours, minutes] = timePart.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
 }
 
-function openModal() {
-    if (medicineModal) medicineModal.style.display = 'flex';
-}
-
-function closeModal() {
-    if (medicineModal) medicineModal.style.display = 'none';
-    if (medicineForm) medicineForm.reset();
-}
-
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
     e.preventDefault();
 
     const name = document.getElementById('medicineName').value;
@@ -416,63 +538,59 @@ function handleFormSubmit(e) {
     const frequency = document.getElementById('frequency').value;
     const time = document.getElementById('scheduleTime').value;
     const notes = document.getElementById('notes').value;
+    // Combine today's date with the selected time
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const fullDateTime = `${year}-${month}-${day} ${time}:00`;
 
-    // Create new medicine object
-    const newMedicine = {
-        id: Date.now(), // Simple ID generation - would be handled by backend in real app
+    const medicationData = {
         name,
         dosage,
-        frequency,
-        time,
-        notes,
-        status: 'upcoming'
+        time: fullDateTime,
+        notes
     };
 
-    // In a real application, you would send this to your Python backend
-    // Example: fetch('/api/medicines', { method: 'POST', body: JSON.stringify(newMedicine) })
+    let result;
+    if (editingMedicineId) {
+        // Update existing medication
+        result = await apiUpdateMedication(editingMedicineId, medicationData);
+    } else {
+        // Add new medication
+        result = await apiAddMedication(medicationData);
+    }
 
-    // For now, we'll just add it to our local array
-    medicines.push(newMedicine);
-
-    // Re-render the list
-    renderMedicineList();
-
-    // Show success notification
-    showNotification('Medicine added successfully!', 'success');
-
-    // Close the modal
-    closeModal();
-}
-
-function markMedicineAsTaken(id) {
-    const medicine = medicines.find(m => m.id === id);
-    if (medicine) {
-        medicine.status = 'taken';
-        renderMedicineList();
+    if (result.success) {
+        showNotification(editingMedicineId ? 'Medicine updated successfully!' : 'Medicine added successfully!', 'success');
+        await loadMedications(); // Reload medications from server
+        closeModal();
+    } else {
+        showNotification(result.data.error || 'Operation failed', 'error');
+    }
+} 
+async function markMedicineAsTaken(id) {
+    const result = await apiUpdateMedicationStatus(id, 'taken');
+    
+    if (result.success) {
         showNotification('Medicine marked as taken!', 'success');
+        await loadMedications(); // Reload medications from server
+    } else {
+        showNotification(result.data.error || 'Failed to update status', 'error');
     }
 }
 
-function deleteMedicine(id) {
+async function deleteMedicine(id) {
     if (confirm('Are you sure you want to delete this medicine?')) {
-        // In a real application, you would send a DELETE request to your Python backend
-        // Example: fetch(`/api/medicines/${id}`, { method: 'DELETE' })
-
-        medicines = medicines.filter(m => m.id !== id);
-        renderMedicineList();
-        showNotification('Medicine deleted successfully!', 'success');
+        const result = await apiDeleteMedication(id);
+        
+        if (result.success) {
+            showNotification('Medicine deleted successfully!', 'success');
+            await loadMedications(); // Reload medications from server
+        } else {
+            showNotification(result.data.error || 'Failed to delete medicine', 'error');
+        }
     }
-}
-
-function showNotification(message, type) {
-    if (!notification) return;
-
-    notification.textContent = message;
-    notification.className = `notification ${type} show`;
-
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 3000);
 }
 
 function openEditModal(id) {
@@ -491,11 +609,36 @@ function openEditModal(id) {
     // Pre-fill the form
     document.getElementById('medicineName').value = medicine.name;
     document.getElementById('dosage').value = medicine.dosage;
-    document.getElementById('frequency').value = medicine.frequency;
-    document.getElementById('scheduleTime').value = medicine.time;
+    document.getElementById('frequency').value = 'once'; // Default since your schema doesn't have frequency
+    // Extract just the time part for the time input
+    const timePart = medicine.time.split(' ')[1].substring(0, 5); // Gets "HH:MM"
+    document.getElementById('scheduleTime').value = timePart;
     document.getElementById('notes').value = medicine.notes;
 }
 
+function openModal() {
+    if (medicineModal) medicineModal.style.display = 'flex';
+    editingMedicineId = null;
+    document.getElementById('modalTitle').textContent = 'Add New Medicine';
+    document.getElementById('submitBtn').textContent = 'Add Medicine';
+}
+
+function closeModal() {
+    if (medicineModal) medicineModal.style.display = 'none';
+    if (medicineForm) medicineForm.reset();
+    editingMedicineId = null;
+}
+
+function showNotification(message, type) {
+    if (!notification) return;
+
+    notification.textContent = message;
+    notification.className = `notification ${type} show`;
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
 // ==================== USER DASHBOARD ====================
 function getUserData() {
     return JSON.parse(localStorage.getItem('user') || '{}');
@@ -752,6 +895,14 @@ document.addEventListener('DOMContentLoaded', function () {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             window.location.href = 'medicine_schedule_overall.html';
+        });
+    });
+    // Today's Schedule Links - For the "View All" in Today's Medications box
+    const todayLinks = document.querySelectorAll('a.view-all[data-section="today"]');
+    todayLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'medicine_schedule.html';
         });
     });
 });

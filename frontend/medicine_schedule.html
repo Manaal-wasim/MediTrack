@@ -7,6 +7,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <title>MediTrack - Medicine Schedule</title>
 </head>
+<script>
+    // Check if user is logged in
+    document.addEventListener('DOMContentLoaded', function() {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.user_id) {
+            alert('Please login first!');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        console.log('✅ User is logged in for monthly medication view:', user);
+    });
+</script>
 <body class="medicine-tracker-body">
     <div class="medicine-container">
         <header class="shedule-header">
@@ -134,5 +147,45 @@
     <div class="notification" id="notification"></div>
     
     <script src="app.js"></script>
+    <script>
+    // Update date and time in real-time
+    function updateDateTime() {
+        const now = new Date();
+        const timeElement = document.querySelector('.time');
+        const dateElement = document.querySelector('.date');
+        
+        if (timeElement) {
+            timeElement.textContent = now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+        
+        if (dateElement) {
+            dateElement.textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+    }
+    
+    // Update immediately and then every minute
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    
+    // Update page title with today's date
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        document.title = `MediTrack - Medicine Schedule for ${formattedDate}`;
+    });
+</script>
 </body>
 </html>
