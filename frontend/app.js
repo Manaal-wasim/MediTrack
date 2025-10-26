@@ -191,6 +191,46 @@ async function apiUpdateMedicationStatus(medicineId, status) {
         return { success: false, data: { error: 'Network error. Please try again.' } };
     }
 }
+
+
+async function apiGetMyMedications() {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const response = await fetch(`${API_BASE_URL}/api/my-medications`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`,
+                'User-Id': user.user_id  // Fallback header
+            }
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Get my medications error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
+async function apiSearchMyMedications(searchTerm) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const response = await fetch(`${API_BASE_URL}/api/my-medications/search?q=${encodeURIComponent(searchTerm)}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${user.user_id}`,
+                'User-Id': user.user_id  // Fallback header
+            }
+        });
+
+        const data = await response.json();
+        return { success: response.ok, data };
+    } catch (error) {
+        console.error('Search medications error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } };
+    }
+}
+
 // ==================== AUTH FORMS ====================
 function initAuthForms() {
     console.log("initAuthForms called - setting up form handlers");
@@ -350,7 +390,7 @@ function initSmoothScrolling() {
     }
 }
 
-// ==================== MEDICINE TRACKER ====================
+// ==================== MEDICINE TRACKER ====================//
 let medicines = [];
 let editingMedicineId = null;
 
@@ -412,10 +452,10 @@ async function loadMedications() {
     
     if (result.success) {
         medicines = result.data.medications || [];
-        console.log(`💊 Loaded ${medicines.length} medications`);
+        console.log(`Loaded ${medicines.length} medications`);
         renderMedicineList();
     } else {
-        console.error('❌ API Error:', result.data.error);
+        console.error('API Error:', result.data.error);
         showNotification('Failed to load medications',  + (result.data.error || 'Unknown error'), 'error');
         medicines = [];
         renderMedicineList();
@@ -639,6 +679,184 @@ function showNotification(message, type) {
         notification.classList.remove('show');
     }, 3000);
 }
+
+// ==================== MY MEDICATIONS PAGE FUNCTIONALITY ====================//
+
+function initMyMedicationsPage() {
+    // Check if we're on the my_medications page
+    if (!window.location.pathname.includes('my_medications.html')) {
+        return;
+    }
+
+    console.log("Initializing My Medications page...");
+    
+    loadMyMedications();
+    setupSearchFunctionality();
+    setupAddMedicationButton();
+}
+
+async function loadMyMedications(searchTerm = '') {
+    let result;
+    
+    if (searchTerm) {
+        result = await apiSearchMyMedications(searchTerm);
+    } else {
+        result = await apiGetMyMedications();
+    }
+    
+    console.log('My Medications API Response:', result);
+    
+    if (result.success) {
+        const medications = result.data.medications || [];
+        console.log(`Loaded ${medications.length} medications`);
+        renderMyMedications(medications);
+    } else {
+        console.error(' API Error:', result.data.error);
+        showNotification('Failed to load medications: ' + (result.data.error || 'Unknown error'), 'error');
+        renderMyMedications([]);
+    }
+}
+
+function renderMyMedications(medications) {
+    const grid = document.getElementById('medicationsGrid');
+    if (!grid) return;
+
+    // Clear the list
+    grid.innerHTML = '';
+
+    // Check if there are medicines
+    if (medications.length === 0) {
+        grid.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <p>No medications found matching your search.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Create medication cards
+    medications.forEach(med => {
+        const card = document.createElement('div');
+        card.className = 'medication-card';
+        
+        card.innerHTML = `
+            <div class="medication-header">
+                <h3 class="medication-name">${med.name}</h3>
+                <span class="medication-dosage">${med.dosage}</span>
+            </div>
+            <div class="medication-details">
+                <div class="detail-item">
+                    <span class="detail-label">Frequency:</span>
+                    <span class="detail-value">${med.frequency}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Purpose:</span>
+                    <span class="detail-value">${med.purpose}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prescriber:</span>
+                    <span class="detail-value">${med.prescriber}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Start Date:</span>
+                    <span class="detail-value">${med.startDate}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Refills:</span>
+                    <span class="detail-value">${med.refills} remaining</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value status-badge status-${med.status.toLowerCase()}">${med.status}</span>
+                </div>
+                ${med.notes ? `
+                <div class="detail-item">
+                    <span class="detail-label">Notes:</span>
+                    <span class="detail-value">${med.notes}</span>
+                </div>` : ''}
+            </div>
+            <div class="medication-actions">
+                <button class="action-btn edit-btn" data-id="${med.id}" title="Edit medication">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="action-btn delete-btn" data-id="${med.id}" title="Delete medication">
+                    <i class="fas fa-trash-alt"></i> Delete
+                </button>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    });
+
+    // Add event listeners to action buttons
+    attachMedicationActionListeners();
+}
+
+function setupSearchFunctionality() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+
+    if (searchInput && searchBtn) {
+        searchBtn.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim();
+            loadMyMedications(searchTerm);
+        });
+        
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                const searchTerm = searchInput.value.trim();
+                loadMyMedications(searchTerm);
+            }
+        });
+    }
+}
+
+function setupAddMedicationButton() {
+    const addBtn = document.querySelector('.add-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            // Redirect to add medication page or open modal
+            window.location.href = 'medicine_schedule.html?action=add';
+        });
+    }
+}
+
+function attachMedicationActionListeners() {
+    // Edit buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const medicineId = this.getAttribute('data-id');
+            editMedication(medicineId);
+        });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const medicineId = this.getAttribute('data-id');
+            deleteMedication(medicineId);
+        });
+    });
+}
+
+async function editMedication(medicineId) {
+    // Redirect to edit page or open edit modal
+    window.location.href = `medicine_schedule.html?action=edit&id=${medicineId}`;
+}
+
+async function deleteMedication(medicineId) {
+    if (confirm('Are you sure you want to delete this medication?')) {
+        const result = await apiDeleteMedication(medicineId);
+        
+        if (result.success) {
+            showNotification('Medication deleted successfully!', 'success');
+            loadMyMedications(); // Reload the list
+        } else {
+            showNotification(result.data.error || 'Failed to delete medication', 'error');
+        }
+    }
+}
 // ==================== USER DASHBOARD ====================
 function getUserData() {
     return JSON.parse(localStorage.getItem('user') || '{}');
@@ -668,17 +886,27 @@ function updateUserAvatar(name) {
         avatar.textContent = initials;
     }
 }
-
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-links a[data-section]');
 
     navLinks.forEach(link => {
         link.addEventListener('click', function (e) {
-            e.preventDefault();
-            navLinks.forEach(nav => nav.classList.remove('active'));
-            this.classList.add('active');
+            // Don't prevent default for actual page links
+            const href = this.getAttribute('href');
+            if (href === '#' || !href.includes('.html')) {
+                e.preventDefault();
+            }
+            
             const section = this.getAttribute('data-section');
-            showSection(section);
+            console.log('Navigation clicked:', section, '->', href);
+            
+            // If it's a hash link, handle the section switching
+            if (href === '#') {
+                navLinks.forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                showSection(section);
+            }
+            // Otherwise, let the browser handle the page navigation
         });
     });
 
@@ -880,6 +1108,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initPasswordToggle();
     initAuthForms();
     initSmoothScrolling();
+    initMyMedicationsPage();
+
 
     // User Dashboard Initialization
     if (window.location.pathname.includes("dashboard.html")) {

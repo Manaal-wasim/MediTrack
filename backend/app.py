@@ -11,7 +11,7 @@ app.secret_key = 'your-secret-key-here'  # Change this to a random secret key
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-CORS(app, origins=["http://localhost:5500", "http://127.0.0.1:5500","http://localhost:3000", "http://127.0.0.1:3000"], supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])  # Enable CORS for all routes
+CORS(app, origins=["http://localhost:5500", "http://127.0.0.1:5500","http://localhost:3000", "http://127.0.0.1:3000"], supports_credentials=True, allow_headers=["Content-Type", "Authorization", "User-id"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])  # Enable CORS for all routes
 
 # Database configuration
 db_config = {
@@ -598,6 +598,162 @@ def update_medication_status(medicine_id):
         cursor.close()
         connection.close()
 
+# My Medications API Endpoints
+@app.route('/api/my-medications', methods=['GET'])
+def get_my_medications():
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        # Get all medications for the user with reminder details
+        cursor.execute("""
+            SELECT 
+                m.medicine_id as id,
+                m.name,
+                m.dosage,
+                m.note as notes,
+                r.reminder_time as time,
+                r.status,
+                d.name as prescriber,
+                d.specialization as purpose
+            FROM Medicine m
+            LEFT JOIN Reminder r ON m.medicine_id = r.medicine_id
+            LEFT JOIN Doctor d ON m.client_id = d.client_id
+            WHERE m.client_id = %s
+            ORDER BY m.name, r.reminder_time
+        """, (user_id,))
+        
+        medications = cursor.fetchall()
+        
+        # Format the medications data
+        formatted_medications = []
+        for med in medications:
+            # Calculate refills based on some logic (you might want to adjust this)
+            refills = 3  # Default value, adjust based on your business logic
+            
+            formatted_medications.append({
+                'id': med['id'],
+                'name': med['name'],
+                'dosage': med['dosage'],
+                'frequency': 'Once daily',  # You might want to calculate this from reminder times
+                'purpose': med['purpose'] or 'General Health',
+                'prescriber': med['prescriber'] or 'Dr. Unknown',
+                'startDate': med['time'].strftime('%Y-%m-%d') if med['time'] else datetime.now().strftime('%Y-%m-%d'),
+                'refills': refills,
+                'notes': med['notes'] or '',
+                'status': med['status'] or 'Pending'
+            })
+        
+        return jsonify({"medications": formatted_medications}), 200
+        
+    except Error as e:
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/my-medications/search', methods=['GET'])
+def search_my_medications():
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    search_term = request.args.get('q', '')
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        # Search medications by name for the current user
+        cursor.execute("""
+            SELECT 
+                m.medicine_id as id,
+                m.name,
+                m.dosage,
+                m.note as notes,
+                r.reminder_time as time,
+                r.status,
+                d.name as prescriber,
+                d.specialization as purpose
+            FROM Medicine m
+            LEFT JOIN Reminder r ON m.medicine_id = r.medicine_id
+            LEFT JOIN Doctor d ON m.client_id = d.client_id
+            WHERE m.client_id = %s AND m.name LIKE %s
+            ORDER BY m.name, r.reminder_time
+        """, (user_id, f'%{search_term}%'))
+        
+        medications = cursor.fetchall()
+        
+        # Format the medications data (same as above)
+        formatted_medications = []
+        for med in medications:
+            refills = 3  # Default value
+            
+            formatted_medications.append({
+                'id': med['id'],
+                'name': med['name'],
+                'dosage': med['dosage'],
+                'frequency': 'Once daily',
+                'purpose': med['purpose'] or 'General Health',
+                'prescriber': med['prescriber'] or 'Dr. Unknown',
+                'startDate': med['time'].strftime('%Y-%m-%d') if med['time'] else datetime.now().strftime('%Y-%m-%d'),
+                'refills': refills,
+                'notes': med['notes'] or '',
+                'status': med['status'] or 'Pending'
+            })
+        
+        return jsonify({"medications": formatted_medications}), 200
+        
+    except Error as e:
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+# Fix the authentication issue in existing endpoints
+def get_authenticated_user_id():
+    """Get user ID from session or from Authorization header"""
+    # First try session (for traditional login)
+    if 'user_id' in session:
+        print(f"✅ Authenticated via session: user_id {session['user_id']}")
+        return session['user_id']
+    
+    # Fallback to header (for API calls)
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        try:
+            user_id = int(auth_header.replace('Bearer ', ''))
+            print(f"✅ Authenticated via header: user_id {user_id}")
+            return user_id
+        except ValueError:
+            print("❌ Invalid user ID in Authorization header")
+            pass
+    
+    # Also check for user_id in request headers directly
+    user_id_header = request.headers.get('User-Id')
+    if user_id_header:
+        try:
+            user_id = int(user_id_header)
+            print(f"✅ Authenticated via User-Id header: user_id {user_id}")
+            return user_id
+        except ValueError:
+            print("❌ Invalid user ID in User-Id header")
+            pass
+    
+    print("❌ No authentication found")
+    return None
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

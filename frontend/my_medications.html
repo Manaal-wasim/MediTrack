@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Medications | Meditrack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-pink: #ff7eb9;
+            --light-pink: #ffc2d6;
+            --pastel-pink: #ffe5ec;
+            --pastel-purple: #e2d1f9;
+            --pastel-blue: #caf0f8;
+            --pastel-green: #d8f3dc;
+            --text-dark: #333;
+            --text-light: #666;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #ffe4f4;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--light-pink);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: var(--primary-pink);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            color: var(--primary-pink);
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--pastel-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-pink);
+            font-weight: bold;
+        }
+
+        .page-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title i {
+            color: var(--primary-pink);
+        }
+
+        .search-section {
+            background-color: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--light-pink);
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-pink);
+        }
+
+        .search-btn {
+            background-color: var(--primary-pink);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #ff5ca3;
+        }
+
+        .medications-section {
+            background-color: #feffdf;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            color: var(--text-dark);
+        }
+
+        .add-btn {
+            background-color: var(--pastel-green);
+            color: #2d6a4f;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .add-btn:hover {
+            background-color: #b7e4c7;
+        }
+
+        .medications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .medication-card {
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-purple));
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .medication-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .medication-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .medication-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .medication-dosage {
+            background-color: var(--pastel-blue);
+            color: #0077b6;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .medication-details {
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            width: 120px;
+            color: var(--text-light);
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--text-dark);
+        }
+
+        .medication-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .edit-btn {
+            background-color: var(--pastel-blue);
+            color: #0077b6;
+        }
+
+        .edit-btn:hover {
+            background-color: #ade8f4;
+        }
+
+        .delete-btn {
+            background-color: #ffccd5;
+            color: #c9184a;
+        }
+
+        .delete-btn:hover {
+            background-color: #ffb3c1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+            font-size: 18px;
+        }
+
+        .no-results i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--light-pink);
+        }
+
+        @media (max-width: 768px) {
+            .medications-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-pills"></i>
+                <h1>Meditrack</h1>
+            </div>
+            <div class="user-info">
+                <span>Hello, Sarah!</span>
+                <div class="user-avatar">S</div>
+            </div>
+        </header>
+
+        <h1 class="page-title">
+            <i class="fas fa-capsules"></i>
+            My Medications
+        </h1>
+
+        <section class="search-section">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search medication by name..." id="searchInput">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </section>
+
+        <section class="medications-section">
+            <div class="section-header">
+                <h2 class="section-title">Current Medications</h2>
+                <button class="add-btn">
+                    <i class="fas fa-plus"></i> Add Medication
+                </button>
+            </div>
+
+            <div class="medications-grid" id="medicationsGrid">
+                <!-- Medication cards will be dynamically inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Sample medication data
+        const medications = [
+            {
+                id: 1,
+                name: "Lisinopril",
+                dosage: "10mg",
+                frequency: "Once daily",
+                purpose: "Blood pressure",
+                prescriber: "Dr. Johnson",
+                startDate: "2023-05-15",
+                refills: 3,
+                notes: "Take in the morning with food"
+            },
+            {
+                id: 2,
+                name: "Metformin",
+                dosage: "500mg",
+                frequency: "Twice daily",
+                purpose: "Type 2 Diabetes",
+                prescriber: "Dr. Martinez",
+                startDate: "2023-03-10",
+                refills: 5,
+                notes: "Take with meals"
+            },
+            {
+                id: 3,
+                name: "Atorvastatin",
+                dosage: "20mg",
+                frequency: "Once daily",
+                purpose: "Cholesterol",
+                prescriber: "Dr. Johnson",
+                startDate: "2023-01-20",
+                refills: 2,
+                notes: "Take at bedtime"
+            },
+            {
+                id: 4,
+                name: "Levothyroxine",
+                dosage: "50mcg",
+                frequency: "Once daily",
+                purpose: "Thyroid",
+                prescriber: "Dr. Lee",
+                startDate: "2022-11-05",
+                refills: 6,
+                notes: "Take on empty stomach, 30 min before food"
+            }
+        ];
+
+        // Function to render medication cards
+        function renderMedications(meds) {
+            const grid = document.getElementById('medicationsGrid');
+            
+            if (meds.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <p>No medications found matching your search.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = meds.map(med => `
+                <div class="medication-card">
+                    <div class="medication-header">
+                        <h3 class="medication-name">${med.name}</h3>
+                        <span class="medication-dosage">${med.dosage}</span>
+                    </div>
+                    <div class="medication-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Frequency:</span>
+                            <span class="detail-value">${med.frequency}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Purpose:</span>
+                            <span class="detail-value">${med.purpose}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Prescriber:</span>
+                            <span class="detail-value">${med.prescriber}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Start Date:</span>
+                            <span class="detail-value">${med.startDate}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Refills:</span>
+                            <span class="detail-value">${med.refills} remaining</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Notes:</span>
+                            <span class="detail-value">${med.notes}</span>
+                        </div>
+                    </div>
+                    <div class="medication-actions">
+                        <button class="action-btn edit-btn">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="action-btn delete-btn">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Function to filter medications based on search
+        function filterMedications(searchTerm) {
+            if (!searchTerm) {
+                return medications;
+            }
+            
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            return medications.filter(med => 
+                med.name.toLowerCase().includes(lowerSearchTerm)
+            );
+        }
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMedications(medications);
+            
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            searchBtn.addEventListener('click', () => {
+                const filteredMeds = filterMedications(searchInput.value);
+                renderMedications(filteredMeds);
+            });
+            
+            searchInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    const filteredMeds = filterMedications(searchInput.value);
+                    renderMedications(filteredMeds);
+                }
+            });
+        });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
