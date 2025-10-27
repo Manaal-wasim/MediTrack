@@ -151,23 +151,24 @@ async function apiUpdateMedication(medicineId, medicationData) {
         return { success: false, data: { error: 'Network error. Please try again.' } };
     }
 }
-async function apiDeleteMedication(medicineId) {
+async function apiDeleteMedication(medicationId) {
     try {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         
-        const response = await fetch(`${API_BASE_URL}/api/medications/${medicineId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/medications/${medicationId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `Bearer ${user.user_id}`  // ADD THIS LINE
+                'Authorization': `Bearer ${user.user_id}`,
+                'User-Id': user.user_id,
+                'Content-Type': 'application/json'
             }
-            // Remove credentials: 'include'
         });
 
         const data = await response.json();
-        return { success: response.ok, data };
+        return { success: response.ok, data }; // ← ADD THIS RETURN STATEMENT
     } catch (error) {
-        console.error('Delete medication error:', error);
-        return { success: false, data: { error: 'Network error. Please try again.' } };
+        console.error('Delete medication API error:', error);
+        return { success: false, data: { error: 'Network error. Please try again.' } }; // ← AND THIS ONE
     }
 }
 async function apiUpdateMedicationStatus(medicineId, status) {
@@ -846,8 +847,12 @@ async function editMedication(medicineId) {
 }
 
 async function deleteMedication(medicineId) {
-    if (confirm('Are you sure you want to delete this medication?')) {
-        const result = await apiDeleteMedication(medicineId);
+    if (!confirm('Are you sure you want to delete this medication?')) {
+        return;
+    }
+
+    try {
+        const result = await apiDeleteMedication(medicineId); // This should now work
         
         if (result.success) {
             showNotification('Medication deleted successfully!', 'success');
@@ -855,6 +860,9 @@ async function deleteMedication(medicineId) {
         } else {
             showNotification(result.data.error || 'Failed to delete medication', 'error');
         }
+    } catch (error) {
+        console.error('Delete medication error:', error);
+        showNotification('Error deleting medication', 'error');
     }
 }
 // ==================== USER DASHBOARD ====================

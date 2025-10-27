@@ -452,7 +452,44 @@ def add_medication():
     finally:
         cursor.close()
         connection.close()
+
+@app.route('/api/medications/<int:medication_id>', methods=['DELETE'])
+def delete_medication(medication_id):
+    try:
+        # Get user from authentication (you'll need to implement this based on your auth system)
+        user_id = get_authenticated_user_id()  # Replace with your actual auth function
         
+        # Get database connection
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        
+        # Verify the medication belongs to the user
+        cursor.execute(
+            'SELECT * FROM Medicine WHERE medicine_id = %s AND client_id = %s',
+            (medication_id, user_id)
+        )
+        medication = cursor.fetchone()
+        
+        if not medication:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'Medication not found'}), 404
+        
+        # Delete the medication
+        cursor.execute(
+            'DELETE FROM Medicine WHERE medicine_id = %s AND client_id = %s',
+            (medication_id, user_id)
+        )
+        connection.commit()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({'success': True, 'message': 'Medication deleted successfully'})
+        
+    except Exception as e:
+        print('Delete medication error:', e)
+        return jsonify({'success': False, 'error': 'Server error'}), 500  
 @app.route('/api/medications/<int:medicine_id>', methods=['PUT'])
 def update_medication(medicine_id):
     user_id = get_authenticated_user_id()  # CHANGED THIS LINE
@@ -506,38 +543,6 @@ def update_medication(medicine_id):
         cursor.close()
         connection.close()
 
-@app.route('/api/medications/<int:medicine_id>', methods=['DELETE'])
-def delete_medication(medicine_id):
-    user_id = get_authenticated_user_id()  # CHANGED THIS LINE
-    if 'user_id' not in session:
-        return jsonify({"error": "Not authenticated"}), 401
-    
-    connection = get_db_connection()
-    if not connection:
-        return jsonify({"error": "Database connection failed"}), 500
-    
-    try:
-        cursor = connection.cursor()
-        
-        # Check if medication belongs to user
-        cursor.execute("SELECT client_id FROM Medicine WHERE medicine_id = %s", (medicine_id,))
-        medicine = cursor.fetchone()
-        
-        if not medicine or medicine[0] != session['user_id']:
-            return jsonify({"error": "Medicine not found or access denied"}), 404
-        
-        # Delete from Medicine (cascades to Reminder and Log due to foreign key)
-        cursor.execute("DELETE FROM Medicine WHERE medicine_id = %s", (medicine_id,))
-        connection.commit()
-        
-        return jsonify({"message": "Medication deleted successfully"}), 200
-        
-    except Error as e:
-        connection.rollback()
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-    finally:
-        cursor.close()
-        connection.close()
 
 @app.route('/api/medications/<int:medicine_id>/status', methods=['PUT'])
 def update_medication_status(medicine_id):
