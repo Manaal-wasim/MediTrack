@@ -682,7 +682,6 @@ function showNotification(message, type) {
 }
 
 // ==================== MY MEDICATIONS PAGE FUNCTIONALITY ====================//
-
 function initMyMedicationsPage() {
     // Check if we're on the my_medications page
     if (!window.location.pathname.includes('my_medications.html')) {
@@ -691,11 +690,20 @@ function initMyMedicationsPage() {
 
     console.log("Initializing My Medications page...");
     
+    // Update user info
+    const userData = getUserData();
+    const userName = userData.name || 'User';
+    
+    // Update username display
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = `${userName}`;
+    }
+    
     loadMyMedications();
     setupSearchFunctionality();
     setupAddMedicationButton();
 }
-
 async function loadMyMedications(searchTerm = '') {
     let result;
     
@@ -865,6 +873,8 @@ async function deleteMedication(medicineId) {
         showNotification('Error deleting medication', 'error');
     }
 }
+
+
 // ==================== USER DASHBOARD ====================
 function getUserData() {
     return JSON.parse(localStorage.getItem('user') || '{}');
