@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Doctors - Meditrack</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="my-doctors-container">
+        <!-- Header -->
+        <header class="doctors-header">
+            <div class="logo">
+                <i class="fas fa-heartbeat logo-icon"></i>
+                <h1><span class="logo-medi">Medi</span><span class="logo-track">track</span></h1>
+            </div>
+            <div class="user-info">
+                <span id="username">User</span>
+                <div class="user-avatar">
+                    <div class="avatar-placeholder">U</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-user-md"></i> My Doctors</h1>
+            <p class="page-subtitle">Manage your healthcare providers and their contact information</p>
+            <button class="add-doctor-main-btn" id="openDoctorModal">
+                <i class="fas fa-plus"></i> Add New Doctor
+            </button>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="doctors-layout">
+            <!-- Main Content -->
+            <section class="doctors-main-section">
+                <div class="section-title">
+                    <h2><i class="fas fa-list"></i> Your Doctors</h2>
+                    <span class="doctors-count" id="doctorsCount">0 doctors</span>
+                </div>
+                <div class="doctors-grid" id="doctorsGrid">
+                    <!-- Doctors will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside class="doctors-sidebar">
+                <div class="stats-card">
+                    <h3>Total Doctors</h3>
+                    <span class="stat-value" id="totalDoctors">0</span>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>Specialties</h3>
+                    <span class="stat-value" id="specialtiesCount">0</span>
+                </div>
+
+                <div class="recent-activity">
+                    <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                    <div class="activity-list" id="activityList">
+                        <!-- Activity items will be added here -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Doctor Modal -->
+    <div class="doctor-modal" id="doctorModal">
+        <div class="doctor-modal-content">
+            <div class="doctor-modal-header">
+                <h2 class="doctor-modal-title" id="openDoctorModal"><i class="fas fa-user-md"></i> Add New Doctor</h2>
+                <button class="close-doctor-modal" id="closeDoctorModal">&times;</button>
+            </div>
+            <form class="doctor-form" id="doctorModalForm">
+                <div class="form-group-doctor">
+                    <label for="modalDoctorName"><i class="fas fa-user"></i> Doctor Name *</label>
+                    <input type="text" id="modalDoctorName" name="doctorName" required placeholder="Dr. John Smith">
+                </div>
+                
+                <div class="form-group-doctor">
+                    <label for="modalDoctorSpecialty"><i class="fas fa-stethoscope"></i> Specialty</label>
+                    <input type="text" id="modalDoctorSpecialty" name="doctorSpecialty" placeholder="Cardiology, General Practitioner, etc.">
+                </div>
+                
+                <div class="form-group-doctor">
+                    <label for="modalDoctorPhone"><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="tel" id="modalDoctorPhone" name="doctorPhone" placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <div class="form-group-doctor">
+                    <label for="modalDoctorEmail"><i class="fas fa-envelope"></i> Email Address</label>
+                    <input type="email" id="modalDoctorEmail" name="doctorEmail" placeholder="doctor@hospital.com">
+                </div>
+                
+                <div class="form-group-doctor">
+                    <label for="modalDoctorAddress"><i class="fas fa-map-marker-alt"></i> Clinic Address</label>
+                    <input type="text" id="modalDoctorAddress" name="doctorAddress" placeholder="123 Medical Center Dr, City, State">
+                </div>
+                
+                <div class="form-actions-doctor">
+                    <button type="button" class="btn-doctor btn-doctor-secondary" id="cancelModalDoctorBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-doctor btn-doctor-primary" id="submitModalDoctorBtn">
+                        <i class="fas fa-plus"></i> Add Doctor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script src="app.js"></script>
+</body>
+</html> 

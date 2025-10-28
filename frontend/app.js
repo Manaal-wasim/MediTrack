@@ -1115,6 +1115,369 @@ if (window.location.pathname.includes("admin.html")) {
         dbEntries.textContent = "547";
     }
 }
+// ==================== MY DOCTORS PAGE FUNCTIONALITY ====================
+function initMyDoctorsPage() {
+    if (!window.location.pathname.includes('doctors.html')) {
+        return;
+    }
+
+    console.log("Initializing My Doctors page...");
+    
+    // Simple user info update
+    const userData = getUserData();
+    const userName = userData.name || 'User';
+    
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = userName;
+    }
+    
+    // Update avatar if exists
+    const avatar = document.querySelector('.avatar-placeholder');
+    if (avatar && userName) {
+        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
+        avatar.textContent = initials;
+    }
+     console.log("📋 Loading doctors...");
+    loadDoctors();
+    
+    console.log("🔄 Setting up modal...");
+    setupDoctorModal();
+    
+    console.log("✅ My Doctors page initialized");
+
+    loadDoctors();
+    setupDoctorModal();
+}
+
+let doctors = [];
+let editingDoctorId = null;
+
+async function loadDoctors() {
+   console.log("📥 Loading doctors from localStorage...");
+    
+    const savedDoctors = localStorage.getItem('meditrack-doctors');
+    console.log("📄 Raw saved data:", savedDoctors);
+    
+    doctors = savedDoctors ? JSON.parse(savedDoctors) : [];
+    
+    console.log(`✅ Loaded ${doctors.length} doctors:`, doctors);
+    renderDoctors();
+}
+
+
+function renderDoctors() {
+    const doctorsGrid = document.getElementById('doctorsGrid');
+    if (!doctorsGrid) return;
+
+    doctorsGrid.innerHTML = '';
+
+    if (doctors.length === 0) {
+        doctorsGrid.innerHTML = `
+            <div class="no-doctors">
+                <i class="fas fa-user-md"></i>
+                <p>No doctors added yet. Add your first doctor to get started!</p>
+                <button class="add-doctor-main-btn" id="addDoctorEmptyBtn">
+                    <i class="fas fa-plus"></i> Add Your First Doctor
+                </button>
+            </div>
+        `;
+        
+        // Add event listener to the empty state button
+        const addBtn = document.getElementById('addDoctorEmptyBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', openDoctorModal);
+        }
+    } else {
+        doctors.forEach(doctor => {
+            const card = document.createElement('div');
+            card.className = 'doctor-card';
+            
+            card.innerHTML = `
+                <div class="doctor-header">
+                    <h3 class="doctor-name">${doctor.name}</h3>
+                    <span class="doctor-specialty">${doctor.specialty || 'General Practitioner'}</span>
+                </div>
+                <div class="doctor-contact">
+                    ${doctor.phone ? `
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${doctor.phone}</span>
+                    </div>` : ''}
+                    ${doctor.email ? `
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>${doctor.email}</span>
+                    </div>` : ''}
+                    ${doctor.address ? `
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${doctor.address}</span>
+                    </div>` : ''}
+                </div>
+                <div class="doctor-actions">
+                    <button class="doctor-action-btn edit-doctor-btn" data-id="${doctor.id}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="doctor-action-btn delete-doctor-btn" data-id="${doctor.id}">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </div>
+            `;
+
+            doctorsGrid.appendChild(card);
+        });
+    }
+
+    updateDoctorsStats();
+    attachDoctorActionListeners();
+}
+
+function updateDoctorsStats() {
+  
+    // Update doctors count
+    const doctorsCount = document.getElementById('doctorsCount');
+    const totalDoctors = document.getElementById('totalDoctors');
+    const specialtiesCount = document.getElementById('specialtiesCount');
+    
+    if (doctorsCount) doctorsCount.textContent = `${doctors.length} doctor${doctors.length !== 1 ? 's' : ''}`;
+    if (totalDoctors) totalDoctors.textContent = doctors.length;
+    
+    // Count unique specialties and update tooltip
+    const specialties = new Set(doctors.map(doctor => doctor.specialty).filter(Boolean));
+    if (specialtiesCount) {
+        specialtiesCount.textContent = specialties.size;
+        // Add title for better UX
+        specialtiesCount.title = `Unique specialties: ${Array.from(specialties).join(', ') || 'None'}`;
+    }
+    
+    // Update recent activity
+    updateRecentActivity();
+    
+    console.log(`📊 Stats: ${doctors.length} doctors, ${specialties.size} specialties`);
+}
+
+
+function updateRecentActivity() {
+    const activityList = document.getElementById('activityList');
+    if (!activityList) return;
+    
+    if (doctors.length === 0) {
+        activityList.innerHTML = `
+            <div class="activity-item">
+                <i class="fas fa-info-circle"></i>
+                <span>No recent activity</span>
+            </div>
+        `;
+        return;
+    }
+    
+    // Show last 3 doctors added as recent activity
+    const recentDoctors = doctors.slice(-3).reverse();
+    activityList.innerHTML = recentDoctors.map(doctor => `
+        <div class="activity-item">
+            <i class="fas fa-user-plus"></i>
+            <span>Added ${doctor.name}</span>
+        </div>
+    `).join('');
+}
+
+function setupDoctorModal() {
+    console.log("Setting up doctor modal...");
+    
+    const modal = document.getElementById('doctorModal');
+    const closeBtn = document.getElementById('closeDoctorModal');
+    const cancelBtn = document.getElementById('cancelModalDoctorBtn');
+    const openBtn = document.getElementById('openDoctorModal');
+    const form = document.getElementById('doctorModalForm');
+
+    console.log("Modal elements:", { modal, openBtn, form });
+
+    if (openBtn) {
+        console.log("Adding click listener to open button");
+        openBtn.addEventListener('click', openDoctorModal);
+    } else {
+        console.error("Open button not found!");
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeDoctorModal);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeDoctorModal);
+    }
+
+    if (form) {
+        form.addEventListener('submit', handleDoctorFormSubmit);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeDoctorModal();
+            }
+        });
+    }
+}
+
+function openDoctorModal() {
+    const modal = document.getElementById('doctorModal');
+    const modalTitle = document.getElementById('doctorModalTitle');
+    const submitBtn = document.getElementById('submitModalDoctorBtn');
+    
+    if (modal) {
+        modal.style.display = 'flex';
+        editingDoctorId = null;
+        modalTitle.textContent = 'Add New Doctor';
+        submitBtn.textContent = 'Add Doctor';
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Doctor';
+        
+        // Reset form
+        const form = document.getElementById('doctorModalForm');
+        if (form) form.reset();
+    }
+}
+
+function closeDoctorModal() {
+    const modal = document.getElementById('doctorModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    editingDoctorId = null;
+}
+
+function handleDoctorFormSubmit(e) {
+    e.preventDefault();
+    console.log("📋 Form submitted!");
+
+    const name = document.getElementById('modalDoctorName').value.trim();
+    const specialty = document.getElementById('modalDoctorSpecialty').value.trim();
+    const phone = document.getElementById('modalDoctorPhone').value.trim();
+    const email = document.getElementById('modalDoctorEmail').value.trim();
+    const address = document.getElementById('modalDoctorAddress').value.trim();
+
+    console.log("Form data:", { name, specialty, phone, email, address });
+
+    if (!name) {
+        alert('Please enter doctor name');
+        return;
+    }
+
+    const doctorData = {
+        name,
+        specialty: specialty || 'General Practitioner',
+        phone,
+        email,
+        address
+    };
+
+    console.log("Processing doctor data:", doctorData);
+
+    if (editingDoctorId) {
+        console.log("Updating existing doctor:", editingDoctorId);
+        updateDoctor(editingDoctorId, doctorData);
+    } else {
+        console.log("Adding new doctor");
+        addDoctor(doctorData);
+    }
+}
+
+function addDoctor(doctorData) {
+    console.log("📝 Adding new doctor:", doctorData);
+    
+    const newDoctor = {
+        id: Date.now(),
+        ...doctorData,
+        createdAt: new Date().toISOString()
+    };
+
+    doctors.push(newDoctor);
+    console.log("💾 Saving doctors to localStorage:", doctors);
+    saveDoctors();
+    
+    console.log("🔄 Re-rendering doctors list");
+    renderDoctors();
+    closeDoctorModal();
+    
+    showNotification('Doctor added successfully!', 'success');
+}
+
+function updateDoctor(doctorId, doctorData) {
+    const doctorIndex = doctors.findIndex(d => d.id === doctorId);
+    if (doctorIndex !== -1) {
+        doctors[doctorIndex] = { ...doctors[doctorIndex], ...doctorData };
+        saveDoctors();
+        renderDoctors();
+        closeDoctorModal();
+        
+        showNotification('Doctor updated successfully!', 'success');
+    }
+}
+
+function deleteDoctor(doctorId) {
+    if (confirm('Are you sure you want to delete this doctor?')) {
+        doctors = doctors.filter(d => d.id !== doctorId);
+        saveDoctors();
+        renderDoctors();
+        
+        showNotification('Doctor deleted successfully!', 'success');
+    }
+}
+
+function editDoctor(doctorId) {
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (!doctor) return;
+
+    editingDoctorId = doctorId;
+
+    const modal = document.getElementById('doctorModal');
+    const modalTitle = document.getElementById('doctorModalTitle');
+    const submitBtn = document.getElementById('submitModalDoctorBtn');
+    
+    if (modal) {
+        modal.style.display = 'flex';
+        modalTitle.textContent = 'Edit Doctor';
+        submitBtn.textContent = 'Update Doctor';
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Doctor';
+
+        // Pre-fill the form
+        document.getElementById('modalDoctorName').value = doctor.name;
+        document.getElementById('modalDoctorSpecialty').value = doctor.specialty || '';
+        document.getElementById('modalDoctorPhone').value = doctor.phone || '';
+        document.getElementById('modalDoctorEmail').value = doctor.email || '';
+        document.getElementById('modalDoctorAddress').value = doctor.address || '';
+    }
+}
+
+function saveDoctors() {
+    console.log("💾 Saving doctors:", doctors);
+    localStorage.setItem('meditrack-doctors', JSON.stringify(doctors));
+    
+    // Verify it was saved
+    const saved = localStorage.getItem('meditrack-doctors');
+    console.log("✅ Verified saved data:", saved);
+}
+
+
+function attachDoctorActionListeners() {
+    // Edit buttons
+    document.querySelectorAll('.edit-doctor-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const doctorId = parseInt(this.getAttribute('data-id'));
+            editDoctor(doctorId);
+        });
+    });
+
+    // Delete buttons
+    document.querySelectorAll('.delete-doctor-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const doctorId = parseInt(this.getAttribute('data-id'));
+            deleteDoctor(doctorId);
+        });
+    });
+}
+
 
 // ==================== MAIN INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function () {
@@ -1127,6 +1490,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initAuthForms();
     initSmoothScrolling();
     initMyMedicationsPage();
+    initMyDoctorsPage();
 
 
     // User Dashboard Initialization
