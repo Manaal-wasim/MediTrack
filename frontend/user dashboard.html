@@ -63,7 +63,7 @@
                     <div class="stat-icon"></div>
                     <div class="stat-content">
                         <h3>Upcoming Doses Today</h3>
-                        <div class="value" id="upcoming-doses">3</div>
+                        <div class="value" id="upcoming-doses-count">3</div>
                         <div class="trend down">Next in 2 hours</div>
                     </div>
                 </div>
@@ -73,6 +73,14 @@
                         <h3>Adherence Rate</h3>
                         <div class="value" id="adherence-rate">92%</div>
                         <div class="trend up">+3% this week</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon"></div>
+                    <div class="stat-content">
+                        <h3>Next Dose</h3>
+                        <div class="value" id="next-dose-time">2 hours</div> <!-- Added this -->
+                        <div class="trend up">Metformin</div>
                     </div>
                 </div>
                 <div class="stat-card purple">
@@ -95,52 +103,11 @@
                             <h3>Today's Medications</h3>
                             <a href="#" class="view-all" data-section="today">View Schedule</a>
                         </div>
-                        <div class="medications-today">
-                            <div class="medication-time-group">
-                                <h4>Morning <span class="time-indicator">8:00 AM</span></h4>
-                                <div class="medication-item">
-                                    <div class="med-info">
-                                        <div class="med-icon"></div>
-                                        <div>
-                                            <h5>Metformin</h5>
-                                            <p>500mg · For diabetes</p>
-                                            <span class="med-notes">Take with food</span>
-                                        </div>
-                                    </div>
-                                    <button class="status-btn taken">Taken</button>
-                                </div>
-                            </div>
-                            
-                            <div class="medication-time-group">
-                                <h4>Afternoon <span class="time-indicator">12:00 PM</span></h4>
-                                <div class="medication-item">
-                                    <div class="med-info">
-                                        <div class="med-icon"></div>
-                                        <div>
-                                            <h5>Lisinopril</h5>
-                                            <p>10mg · For blood pressure</p>
-                                        </div>
-                                    </div>
-                                    <button class="status-btn pending">Mark Taken</button>
-                                </div>
-                            </div>
-                            
-                            <div class="medication-time-group">
-                                <h4>Evening <span class="time-indicator">6:00 PM</span></h4>
-                                <div class="medication-item">
-                                    <div class="med-info">
-                                        <div class="med-icon"></div>
-                                        <div>
-                                            <h5>Atorvastatin</h5>
-                                            <p>20mg · For cholesterol</p>
-                                        </div>
-                                    </div>
-                                    <button class="status-btn pending">Mark Taken</button>
-                                </div>
-                            </div>
+                        <div id="today-medications" class="medications-today">
+                            <!-- This will be populated by JavaScript -->
+                            <div class="loading-message">Loading today's medications...</div>
                         </div>
                     </div>
-
                     <!-- Quick Actions -->
                     <div class="content-card">
                         <div class="card-header">

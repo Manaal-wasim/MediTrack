@@ -873,37 +873,29 @@ async function deleteMedication(medicineId) {
         showNotification('Error deleting medication', 'error');
     }
 }
-
-
 // ==================== USER DASHBOARD ====================
 function getUserData() {
     return JSON.parse(localStorage.getItem('user') || '{}');
 }
 
-function initDashboard() {
+async function initDashboard() {
     const userData = getUserData();
     const userName = userData.name || 'User';
+
+    // Safe updates for user info
+    safeUpdateElement('welcome-message', `Welcome back, ${userName}!`);
+    safeUpdateElement('username', userName);
     
     document.getElementById('welcome-message').textContent = `Welcome back, ${userName}!`;
     document.getElementById('username').textContent = userName;
     updateUserAvatar(userName);
     updateCurrentDate();
-    updateDashboardStats();
+    
+    // Load real data from API
+    await updateDashboardStats();
+    await loadTodayMedications();
 }
 
-function updateCurrentDate() {
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('current-date-display').textContent = `Today is ${now.toLocaleDateString('en-US', options)}`;
-}
-
-function updateUserAvatar(name) {
-    const avatar = document.querySelector('.avatar-placeholder');
-    if (name) {
-        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-        avatar.textContent = initials;
-    }
-}
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-links a[data-section]');
 
@@ -928,129 +920,316 @@ function setupNavigation() {
         });
     });
 
-    document.getElementById('logout-btn').addEventListener('click', function (e) {
-        e.preventDefault();
-        if (confirm('Are you sure you want to log out?')) {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
+    // Add logout button if it exists
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+}
+
+function updateCurrentDate() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date-display').textContent = `Today is ${now.toLocaleDateString('en-US', options)}`;
+}
+
+function updateUserAvatar(name) {
+    const avatar = document.querySelector('.avatar-placeholder');
+    if (name) {
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+        avatar.textContent = initials;
+    }
+}
+
+async function updateDashboardStats() {
+    try {
+        console.log("🔄 Updating dashboard stats...");
+        
+        // Get all medications for active count
+        const medsResult = await apiGetMedications();
+        const allMedications = medsResult.success ? medsResult.data.medications || [] : [];
+        
+        // Get today's medications for upcoming doses
+        const todayResult = await apiGetTodayMedications();
+        const todayMedications = todayResult.success ? todayResult.data.medications || [] : [];
+        
+        // Calculate stats
+        const activeMedsCount = allMedications.length;
+        const upcomingDosesCount = todayMedications.filter(med => 
+            med.status === 'Pending' || med.status === 'upcoming'
+        ).length;
+        
+        // Get next medication time
+        const nextMedTime = getNextMedicationTime(todayMedications);
+        
+        // Safe DOM updates with null checks
+        safeUpdateElement('active-meds-count', activeMedsCount);
+        safeUpdateElement('upcoming-doses-count', upcomingDosesCount);
+        safeUpdateElement('next-dose-time', nextMedTime || 'None');
+        
+        // Update adherence
+        const adherenceRate = calculateAdherenceRate(allMedications);
+        safeUpdateElement('adherence-rate', `${adherenceRate}%`);
+        
+        // Hide doctors count section if it exists
+        const doctorsSection = document.querySelector('.stat-card:has(#doctors-count)');
+        if (doctorsSection) {
+            doctorsSection.style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('Error updating dashboard stats:', error);
+    }
+}
+
+// Helper function for safe DOM updates
+function safeUpdateElement(elementId, content) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = content;
+    } else {
+        console.warn(`Element with id '${elementId}' not found`);
+    }
+}
+
+function getNextMedicationTime(medications) {
+    const now = new Date();
+    const pendingMeds = medications.filter(med => 
+        (med.status === 'Pending' || med.status === 'upcoming') && med.time
+    );
+    
+    if (pendingMeds.length === 0) return 'None';
+    
+    // Find the next medication time
+    const nextMed = pendingMeds.sort((a, b) => new Date(a.time) - new Date(b.time))[0];
+    const medTime = new Date(nextMed.time);
+    
+    const diffMs = medTime - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (diffHours > 0) {
+        return `In ${diffHours}h ${diffMinutes}m`;
+    } else if (diffMinutes > 0) {
+        return `In ${diffMinutes}m`;
+    } else {
+        return 'Now';
+    }
+}
+
+function calculateAdherenceRate(medications) {
+    // Simple calculation - you might want to use your Log table data
+    const takenMeds = medications.filter(med => 
+        med.status === 'Completed' || med.status === 'taken'
+    ).length;
+    
+    if (medications.length === 0) return 0;
+    
+    return Math.round((takenMeds / medications.length) * 100);
+}
+
+async function loadTodayMedications() {
+    try {
+        const result = await apiGetTodayMedications();
+        if (result.success) {
+            const todayMeds = result.data.medications || [];
+            renderTodayMedications(todayMeds);
+        }
+    } catch (error) {
+        console.error('Error loading today medications:', error);
+    }
+}
+
+function renderTodayMedications(medications) {
+    const container = document.getElementById('today-medications');
+    if (!container) {
+        console.error('❌ Container #today-medications not found!');
+        return;
+    }
+    
+    console.log('📦 Medications received:', medications);
+    
+    // Group by time of day with debugging
+    const morningMeds = medications.filter(med => {
+        const isMorning = isMorningTime(med.time);
+        console.log(`🌅 ${med.name} at ${med.time} -> Morning: ${isMorning}`);
+        return isMorning;
+    });
+    
+    const afternoonMeds = medications.filter(med => {
+        const isAfternoon = isAfternoonTime(med.time);
+        console.log(`☀️ ${med.name} at ${med.time} -> Afternoon: ${isAfternoon}`);
+        return isAfternoon;
+    });
+    
+    const eveningMeds = medications.filter(med => {
+        const isEvening = isEveningTime(med.time);
+        console.log(`🌙 ${med.name} at ${med.time} -> Evening: ${isEvening}`);
+        return isEvening;
+    });
+    
+    console.log('⏰ Grouped medications:', {
+        morning: morningMeds.length,
+        afternoon: afternoonMeds.length, 
+        evening: eveningMeds.length
+    });
+    
+    container.innerHTML = `
+        ${renderTimeSlot('Morning', morningMeds)}
+        ${renderTimeSlot('Afternoon', afternoonMeds)}
+        ${renderTimeSlot('Evening', eveningMeds)}
+    `;
+    
+    console.log('✅ HTML updated, attaching event listeners...');
+    attachMedicationActionListeners();
+}
+
+function renderTimeSlot(timeOfDay, medications) {
+    if (medications.length === 0) {
+        return `
+            <div class="medication-time-group">
+                <h4>${timeOfDay}</h4>
+                <div class="no-medications">No medications scheduled</div>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="medication-time-group">
+            <h4>${timeOfDay}</h4>
+            ${medications.map(med => {
+                // Format the actual time from the database
+                const medTime = new Date(med.time);
+                const displayTime = medTime.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+                
+                const isTaken = med.status === 'completed' || med.status === 'taken';
+                const buttonText = isTaken ? 'Taken' : 'Mark Taken';
+                const buttonClass = isTaken ? 'taken' : 'pending';
+                
+                return `
+                <div class="medication-item">
+                    <div class="med-info">
+                        <div class="med-icon"></div>
+                        <div>
+                            <h5>${med.name}</h5>
+                            <p>${med.dosage} · ${displayTime}</p>
+                            ${med.notes ? `<span class="med-notes">${med.notes}</span>` : ''}
+                        </div>
+                    </div>
+                    <button class="status-btn ${buttonClass}" 
+                            data-id="${med.id}">
+                        ${buttonText}
+                    </button>
+                </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+function isMorningTime(timeString) {
+    try {
+        const time = new Date(timeString);
+        const hour = time.getHours();
+        console.log(`🌅 ${timeString} -> hour: ${hour}, isMorning: ${hour >= 6 && hour < 12}`);
+        return hour >= 6 && hour < 12;
+    } catch (e) {
+        console.error('Error parsing morning time:', timeString, e);
+        return false;
+    }
+}
+
+function isAfternoonTime(timeString) {
+    try {
+        const time = new Date(timeString);
+        const hour = time.getHours();
+        console.log(`☀️ ${timeString} -> hour: ${hour}, isAfternoon: ${hour >= 12 && hour < 17}`);
+        return hour >= 12 && hour < 17;
+    } catch (e) {
+        console.error('Error parsing afternoon time:', timeString, e);
+        return false;
+    }
+}
+
+function isEveningTime(timeString) {
+    try {
+        const time = new Date(timeString);
+        const hour = time.getHours();
+        console.log(`🌙 ${timeString} -> hour: ${hour}, isEvening: ${hour >= 17 || hour < 6}`);
+        return hour >= 17 || hour < 6;
+    } catch (e) {
+        console.error('Error parsing evening time:', timeString, e);
+        return false;
+    }
+}
+
+// Update your existing setupEventListeners to handle real data
+function setupEventListeners() {
+    // Mark medication as taken
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('status-btn') && e.target.classList.contains('pending')) {
+            const medicineId = e.target.getAttribute('data-id');
+            markMedicationAsTaken(medicineId, e.target);
         }
     });
+
+    // ... rest of your existing event listeners
 }
 
-function showSection(section) {
-    const sections = {
-        'dashboard': 'Dashboard overview with today\'s medications and adherence',
-        'medications': 'Manage your medications - add, edit, or remove',
-        'schedule': 'View and manage your medication schedule',
-        'doctors': 'Manage your doctors and their contact information',
-        'adherence': 'View detailed medication adherence reports',
-        'upcoming': 'See all upcoming medications for the week'
-    };
-    showToast(`Loading ${sections[section] || 'section'}...`);
-}
-
-function setupEventListeners() {
-    // Mark medication as taken/missed
-    document.querySelectorAll('.status-btn.pending').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const medicationName = this.closest('.medication-item').querySelector('h5').textContent;
-            this.textContent = 'Taken';
-            this.classList.remove('pending');
-            this.classList.add('taken');
-            this.disabled = true;
-            updateAdherenceStats();
-            showToast(`${medicationName} marked as taken!`);
-        });
-    });
-
-    // Quick actions
-    document.getElementById('add-medication-btn').addEventListener('click', function () {
-        showToast('Add medication feature opening...');
-    });
-
-    document.getElementById('add-doctor-btn').addEventListener('click', function () {
-        showToast('Add doctor feature opening...');
-    });
-
-    document.getElementById('search-medications-btn').addEventListener('click', function () {
-        showToast('Search medications by name or filter by time');
-    });
-
-    // Doctor actions
-    document.querySelectorAll('.appointment-action').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const doctorName = this.closest('.appointment-item').querySelector('h5').textContent;
-            showToast(`Editing ${doctorName}'s information`);
-        });
-    });
-
-    // View all links
-    document.querySelectorAll('.view-all').forEach(link => {
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
-            const section = this.getAttribute('data-section');
-            showSection(section);
-        });
-    });
-}
-
-function updateAdherenceStats() {
-    const adherenceRate = document.getElementById('adherence-rate');
-    const currentRate = parseInt(adherenceRate.textContent);
-    const newRate = Math.min(100, currentRate + 2);
-    adherenceRate.textContent = `${newRate}%`;
-    updateProgressBars();
-}
-
-function updateProgressBars() {
-    const adherenceRate = parseInt(document.getElementById('adherence-rate').textContent);
-    document.querySelector('.progress-fill.excellent').style.width = `${adherenceRate}%`;
-}
-
-function updateDashboardStats() {
-    const medications = JSON.parse(localStorage.getItem('meditrack-medications') || '[]');
-    document.getElementById('active-meds-count').textContent = medications.length || 5;
-
-    const doctors = JSON.parse(localStorage.getItem('meditrack-doctors') || '[]');
-    document.getElementById('doctors-count').textContent = doctors.length || 2;
-}
-
-function loadMotivationalQuotes() {
-    const quotes = [
-        { text: "Your health is an investment, not an expense. Every dose taken is a step toward better days.", icon: "💪" },
-        { text: "Consistency is the key to success. You've maintained 92% adherence this week!", icon: "🌟" },
-        { text: "Small steps every day lead to big results. Keep going!", icon: "🚶‍♂️" },
-        { text: "Your commitment to your health is inspiring. You're doing amazing!", icon: "❤️" }
-    ];
-
-    const shuffledQuotes = quotes.sort(() => 0.5 - Math.random()).slice(0, 2);
-    const quoteContainer = document.querySelector('.motivational-quotes');
-
-    if (quoteContainer) {
-        quoteContainer.innerHTML = shuffledQuotes.map(quote => `
-            <div class="quote-item">
-                <div class="quote-icon">${quote.icon}</div>
-                <div class="quote-content">
-                    <p>"${quote.text}"</p>
-                </div>
-            </div>
-        `).join('');
+async function markMedicationAsTaken(medicineId, button) {
+    try {
+        console.log('🔄 Marking medication as taken:', medicineId);
+        const result = await apiUpdateMedicationStatus(medicineId, 'taken');
+        console.log('📊 API response:', result);
+        
+        if (result.success) {
+            button.textContent = 'Taken';
+            button.classList.remove('pending');
+            button.classList.add('taken');
+            button.disabled = true;
+            
+            // Update dashboard stats
+            await updateDashboardStats();
+            showToast('Medication marked as taken!');
+        } else {
+            console.error('❌ API returned error:', result.error);
+            showToast('Error updating medication status', 'error');
+        }
+    } catch (error) {
+        console.error('💥 Error marking medication as taken:', error);
+        showToast('Error updating medication status', 'error');
     }
 }
 
-function showToast(message) {
-    let toast = document.getElementById('status-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'status-toast';
-        toast.className = 'toast';
-        document.body.appendChild(toast);
-    }
-
-    toast.innerHTML = `<span>${message}</span>`;
-    toast.classList.add('show');
-
-    setTimeout(() => toast.classList.remove('show'), 3000);
+function attachMedicationActionListeners() {
+    const markTakenButtons = document.querySelectorAll('.status-btn.pending');
+    console.log(`🎯 Found ${markTakenButtons.length} pending buttons to attach listeners to`);
+    
+    markTakenButtons.forEach(button => {
+        // Remove existing listeners to prevent duplicates
+        button.replaceWith(button.cloneNode(true));
+    });
+    
+    // Re-select after cloning
+    const newButtons = document.querySelectorAll('.status-btn.pending');
+    newButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const medicineId = this.getAttribute('data-id');
+            console.log('🖱️ Mark as taken clicked for medicine:', medicineId);
+            if (medicineId) {
+                markMedicationAsTaken(medicineId, this);
+            }
+        });
+    });
 }
 
 // ==================== ADMIN DASHBOARD ====================
@@ -1495,10 +1674,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // User Dashboard Initialization
     if (window.location.pathname.includes("dashboard.html")) {
-        initDashboard();
-        setupNavigation();
-        setupEventListeners();
-        loadMotivationalQuotes();
+        initDashboard().then(() => {
+            console.log("Dashboard initialized");
+            setupNavigation();
+            setupEventListeners();
+        }
+        ).catch(err => {
+            console.error("Error initializing dashboard:", err);
+        });
     }
 
     // Schedule Links

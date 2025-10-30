@@ -219,7 +219,6 @@ def check_auth():
         }), 200
     else:
         return jsonify({"authenticated": False}), 200
-# Medication Schedule Endpoints
 @app.route('/api/medications/today', methods=['GET'])
 def get_today_medications():
     user_id = get_authenticated_user_id()
@@ -235,13 +234,26 @@ def get_today_medications():
     try:
         cursor = connection.cursor(dictionary=True)
         
+        # FIXED: Get only the most recent reminder for each medicine today
         cursor.execute("""
-            SELECT m.medicine_id, m.name, m.dosage, m.note as notes,
-                   r.reminder_time as schedule_time, r.status
+            SELECT 
+                m.medicine_id as id,
+                m.name,
+                m.dosage,
+                m.note as notes,
+                r.reminder_time as time,
+                r.status,
+                r.reminder_id
             FROM Medicine m
-            LEFT JOIN Reminder r ON m.medicine_id = r.medicine_id
+            INNER JOIN Reminder r ON m.medicine_id = r.medicine_id
             WHERE m.client_id = %s 
             AND DATE(r.reminder_time) = CURDATE()
+            AND r.reminder_id = (
+                SELECT MAX(r2.reminder_id) 
+                FROM Reminder r2 
+                WHERE r2.medicine_id = m.medicine_id 
+                AND DATE(r2.reminder_time) = CURDATE()
+            )
             ORDER BY r.reminder_time
         """, (user_id,))
         
@@ -250,26 +262,30 @@ def get_today_medications():
         
         formatted_medications = []
         for med in medications:
-            if med['schedule_time']:
-                formatted_medications.append({
-                    'id': med['medicine_id'],
-                    'name': med['name'],
-                    'dosage': med['dosage'],
-                    'notes': med['notes'] or '',
-                    'time': str(med['schedule_time']),
-                    'status': med['status'] or 'Pending'
-                })
+            # Debug the time parsing
+            reminder_time = med['time']
+            hour = reminder_time.hour
+            print(f"⏰ Medication {med['name']} at {reminder_time} (hour: {hour})")
+            
+            formatted_medications.append({
+                'id': med['id'],
+                'name': med['name'],
+                'dosage': med['dosage'],
+                'notes': med['notes'] or '',
+                'time': str(med['time']),
+                'status': med['status'].lower() if med['status'] else 'pending',
+                'reminder_id': med['reminder_id']
+            })
         
         print(f"✅ Returning {len(formatted_medications)} formatted medications")
-        return jsonify({"medications": formatted_medications}), 200
+        return jsonify({"success": True, "medications": formatted_medications}), 200
         
     except Error as e:
         print(f"💥 Database error: {str(e)}")
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
         connection.close()
-
 @app.route('/api/medications', methods=['GET'])
 def get_medications():
     user_id = get_authenticated_user_id()
@@ -543,62 +559,71 @@ def update_medication(medicine_id):
         cursor.close()
         connection.close()
 
-
 @app.route('/api/medications/<int:medicine_id>/status', methods=['PUT'])
 def update_medication_status(medicine_id):
-    user_id = get_authenticated_user_id()  # CHANGED THIS LINE
-    if 'user_id' not in session:
-        return jsonify({"error": "Not authenticated"}), 401
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"success": False, "error": "Not authenticated"}), 401
     
     data = request.json
     status = data.get('status')
     
-    # Map frontend status to database status
-    status_map = {
-        'taken': 'Completed',
-        'upcoming': 'Pending', 
-        'missed': 'Pending'  # You might want to handle missed differently
-    }
-    
-    db_status = status_map.get(status, 'Pending')
+    print(f"🔄 Updating medication {medicine_id} status to {status} for user {user_id}")
     
     connection = get_db_connection()
     if not connection:
-        return jsonify({"error": "Database connection failed"}), 500
+        return jsonify({"success": False, "error": "Database connection failed"}), 500
     
     try:
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
         
-        # Check if medication belongs to user
-        cursor.execute("SELECT client_id FROM Medicine WHERE medicine_id = %s", (medicine_id,))
-        medicine = cursor.fetchone()
+        # First, verify the medication belongs to the user and get reminder_id
+        cursor.execute("""
+            SELECT m.medicine_id, r.reminder_id 
+            FROM Medicine m 
+            INNER JOIN Reminder r ON m.medicine_id = r.medicine_id 
+            WHERE m.medicine_id = %s AND m.client_id = %s
+        """, (medicine_id, user_id))
         
-        if not medicine or medicine[0] != session['user_id']:
-            return jsonify({"error": "Medicine not found or access denied"}), 404
+        medication = cursor.fetchone()
+        
+        if not medication:
+            return jsonify({"success": False, "error": "Medicine not found or access denied"}), 404
+        
+        reminder_id = medication['reminder_id']
         
         # Update reminder status
+        if status == 'taken':
+            new_status = 'Completed'
+            log_action = 'Taken'
+        else:
+            new_status = 'Pending'
+            log_action = None
+        
         cursor.execute("""
             UPDATE Reminder 
-            SET status = %s
-            WHERE medicine_id = %s
-        """, (db_status, medicine_id))
+            SET status = %s 
+            WHERE reminder_id = %s
+        """, (new_status, reminder_id))
         
         # Log the action if taken
         if status == 'taken':
             cursor.execute("""
-                INSERT INTO Log (reminder_id, action)
-                SELECT reminder_id, 'Taken' 
-                FROM Reminder 
-                WHERE medicine_id = %s
-            """, (medicine_id,))
+                INSERT INTO Log (reminder_id, action) 
+                VALUES (%s, %s)
+            """, (reminder_id, 'Taken'))
         
         connection.commit()
         
-        return jsonify({"message": "Medication status updated successfully"}), 200
+        return jsonify({
+            "success": True,
+            "message": "Medication status updated successfully"
+        }), 200
         
     except Error as e:
         connection.rollback()
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
+        print(f"💥 Database error: {str(e)}")
+        return jsonify({"success": False, "error": f"Database error: {str(e)}"}), 500
     finally:
         cursor.close()
         connection.close()
