@@ -1294,56 +1294,301 @@ if (window.location.pathname.includes("admin.html")) {
         dbEntries.textContent = "547";
     }
 }
-// ==================== MY DOCTORS PAGE FUNCTIONALITY ====================
-function initMyDoctorsPage() {
-    if (!window.location.pathname.includes('doctors.html')) {
-        return;
-    }
 
-    console.log("Initializing My Doctors page...");
-    
-    // Simple user info update
-    const userData = getUserData();
-    const userName = userData.name || 'User';
-    
-    const usernameElement = document.getElementById('username');
-    if (usernameElement) {
-        usernameElement.textContent = userName;
-    }
-    
-    // Update avatar if exists
-    const avatar = document.querySelector('.avatar-placeholder');
-    if (avatar && userName) {
-        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
-        avatar.textContent = initials;
-    }
-     console.log("📋 Loading doctors...");
-    loadDoctors();
-    
-    console.log("🔄 Setting up modal...");
-    setupDoctorModal();
-    
-    console.log("✅ My Doctors page initialized");
-
-    loadDoctors();
-    setupDoctorModal();
-}
+// ==================== DOCTORS HELPER FUNCTIONS ====================
 
 let doctors = [];
 let editingDoctorId = null;
 
-async function loadDoctors() {
-   console.log("📥 Loading doctors from localStorage...");
+// ==================== FORM VALIDATION FUNCTIONS ====================
+
+function clearFormErrors() {
+    // Remove error styles from all fields
+    const errorFields = document.querySelectorAll('.form-group-doctor.error');
+    errorFields.forEach(field => {
+        field.classList.remove('error');
+    });
     
-    const savedDoctors = localStorage.getItem('meditrack-doctors');
-    console.log("📄 Raw saved data:", savedDoctors);
-    
-    doctors = savedDoctors ? JSON.parse(savedDoctors) : [];
-    
-    console.log(`✅ Loaded ${doctors.length} doctors:`, doctors);
-    renderDoctors();
+    // Remove error messages
+    const errorMessages = document.querySelectorAll('.error-message');
+    errorMessages.forEach(msg => msg.remove());
 }
 
+function markFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group-doctor');
+    
+    if (formGroup) {
+        // Add error class to form group
+        formGroup.classList.add('error');
+        
+        // Remove existing error message
+        const existingError = formGroup.querySelector('.error-message');
+        if (existingError) existingError.remove();
+        
+        // Add error message
+        const errorElement = document.createElement('div');
+        errorElement.className = 'error-message';
+        errorElement.textContent = message;
+        errorElement.style.cssText = 'color: #e74c3c; font-size: 0.8rem; margin-top: 0.25rem;';
+        
+        formGroup.appendChild(errorElement);
+    }
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function isValidPhone(phone) {
+    // Basic phone validation - allows numbers, spaces, hyphens, parentheses, and +
+    const phoneRegex = /^[\+]?[0-9\s\-\(\)]{10,}$/;
+    return phoneRegex.test(phone);
+}
+
+// ==================== DOCTORS MODAL FUNCTIONS ====================
+
+function openDoctorModal() {
+    const modal = document.getElementById('doctorModal');
+    const modalTitle = document.getElementById('doctorModalTitle');
+    const submitBtn = document.getElementById('submitModalDoctorBtn');
+    
+    console.log("🔄 Opening doctor modal...");
+    console.log("Modal elements:", { modal, modalTitle, submitBtn });
+    
+    if (modal) {
+        modal.style.display = 'flex';
+        editingDoctorId = null;
+        
+        if (modalTitle) {
+            modalTitle.textContent = 'Add New Doctor';
+        }
+        
+        if (submitBtn) {
+            submitBtn.textContent = 'Add Doctor';
+            submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Doctor';
+        }
+        
+        const form = document.getElementById('doctorModalForm');
+        if (form) form.reset();
+    }
+}
+
+// Rename this function to avoid conflict with the button ID
+function closeDoctorModalFunc() {
+    const modal = document.getElementById('doctorModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    editingDoctorId = null;
+    console.log("✅ Modal closed successfully");
+}
+
+function setupDoctorModal() {
+    console.log("Setting up doctor modal...");
+    
+    const modal = document.getElementById('doctorModal');
+    const closeBtn = document.getElementById('closeDoctorModal');
+    const cancelBtn = document.getElementById('cancelModalDoctorBtn');
+    const openBtn = document.getElementById('openDoctorModal');
+    const form = document.getElementById('doctorModalForm');
+
+    console.log("Modal elements:", { modal, openBtn, form });
+
+    if (openBtn) {
+        console.log("Adding click listener to open button");
+        openBtn.addEventListener('click', openDoctorModal);
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeDoctorModalFunc);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeDoctorModalFunc);
+    }
+
+    if (form) {
+        form.addEventListener('submit', handleDoctorFormSubmit);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeDoctorModalFunc();
+            }
+        });
+    }
+}
+
+// ==================== DOCTORS CRUD FUNCTIONS ====================
+
+async function handleDoctorFormSubmit(e) {
+    e.preventDefault();
+    console.log("📋 Form submitted!");
+
+    // Get form values
+    const name = document.getElementById('modalDoctorName').value.trim();
+    const specialty = document.getElementById('modalDoctorSpecialty').value.trim();
+    const phone = document.getElementById('modalDoctorPhone').value.trim();
+    const email = document.getElementById('modalDoctorEmail').value.trim();
+    const address = document.getElementById('modalDoctorAddress').value.trim();
+
+    console.log("Form data:", { name, specialty, phone, email, address });
+
+    // Clear previous error styles
+    clearFormErrors();
+
+    // Validate required fields
+    let isValid = true;
+    let errorMessage = '';
+
+    // Name validation (required)
+    if (!name) {
+        markFieldError('modalDoctorName', 'Doctor name is required');
+        isValid = false;
+        errorMessage = 'Please enter doctor name';
+    }
+
+    // Specialty validation (required)
+    if (!specialty) {
+        markFieldError('modalDoctorSpecialty', 'Specialty is required');
+        isValid = false;
+        if (!errorMessage) errorMessage = 'Please enter doctor specialty';
+    }
+
+    // Phone validation (required and format)
+    if (!phone) {
+        markFieldError('modalDoctorPhone', 'Phone number is required');
+        isValid = false;
+        if (!errorMessage) errorMessage = 'Please enter phone number';
+    } else if (!isValidPhone(phone)) {
+        markFieldError('modalDoctorPhone', 'Please enter a valid phone number');
+        isValid = false;
+        if (!errorMessage) errorMessage = 'Please enter a valid phone number';
+    }
+
+    // Email validation (required and format)
+    if (!email) {
+        markFieldError('modalDoctorEmail', 'Email is required');
+        isValid = false;
+        if (!errorMessage) errorMessage = 'Please enter email address';
+    } else if (!isValidEmail(email)) {
+        markFieldError('modalDoctorEmail', 'Please enter a valid email address');
+        isValid = false;
+        if (!errorMessage) errorMessage = 'Please enter a valid email address';
+    }
+
+    // If validation fails, show error and stop submission
+    if (!isValid) {
+        showNotification(errorMessage, 'error');
+        return;
+    }
+
+    // If all validation passes, proceed with form submission
+    const doctorData = {
+        name,
+        specialty: specialty || 'General Practitioner',
+        phone,
+        email,
+        address
+    };
+
+    console.log("Processing doctor data:", doctorData);
+
+    try {
+        if (editingDoctorId) {
+            console.log("Updating existing doctor:", editingDoctorId);
+            await updateDoctor(editingDoctorId, doctorData);
+        } else {
+            console.log("Adding new doctor");
+            await addDoctor(doctorData);
+        }
+    } catch (error) {
+        console.error('Error saving doctor:', error);
+        showNotification('Error saving doctor', 'error');
+    }
+}
+
+async function addDoctor(doctorData) {
+    console.log("📝 Adding new doctor:", doctorData);
+    
+    const result = await apiAddDoctor(doctorData);
+    
+    if (result.success) {
+        console.log("✅ Doctor added successfully");
+        await loadDoctors();
+        closeDoctorModalFunc(); // Use the new function name
+        showNotification('Doctor added successfully!', 'success');
+    } else {
+        throw new Error(result.error || 'Failed to add doctor');
+    }
+}
+
+async function updateDoctor(doctorId, doctorData) {
+    console.log("📝 Updating doctor:", doctorId, doctorData);
+    
+    const result = await apiUpdateDoctor(doctorId, doctorData);
+    
+    if (result.success) {
+        console.log("✅ Doctor updated successfully");
+        await loadDoctors();
+        closeDoctorModalFunc(); // Use the new function name
+        showNotification('Doctor updated successfully!', 'success');
+    } else {
+        throw new Error(result.error || 'Failed to update doctor');
+    }
+}
+
+async function deleteDoctor(doctorId) {
+    if (confirm('Are you sure you want to delete this doctor?')) {
+        console.log("🗑️ Deleting doctor:", doctorId);
+        
+        const result = await apiDeleteDoctor(doctorId);
+        
+        if (result.success) {
+            console.log("✅ Doctor deleted successfully");
+            await loadDoctors();
+            showNotification('Doctor deleted successfully!', 'success');
+        } else {
+            console.error('❌ Failed to delete doctor:', result.error);
+            showNotification('Error deleting doctor', 'error');
+        }
+    }
+}
+
+function editDoctor(doctorId) {
+    const doctor = doctors.find(d => d.id === doctorId);
+    if (!doctor) return;
+
+    editingDoctorId = doctorId;
+
+    const modal = document.getElementById('doctorModal');
+    const modalTitle = document.getElementById('doctorModalTitle');
+    const submitBtn = document.getElementById('submitModalDoctorBtn');
+    
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Doctor';
+        }
+        
+        if (submitBtn) {
+            submitBtn.textContent = 'Update Doctor';
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Doctor';
+        }
+
+        document.getElementById('modalDoctorName').value = doctor.name;
+        document.getElementById('modalDoctorSpecialty').value = doctor.specialty || '';
+        document.getElementById('modalDoctorPhone').value = doctor.phone || '';
+        document.getElementById('modalDoctorEmail').value = doctor.email || '';
+        document.getElementById('modalDoctorAddress').value = doctor.address || '';
+    }
+}
+
+// ==================== DOCTORS DISPLAY FUNCTIONS ====================
 
 function renderDoctors() {
     const doctorsGrid = document.getElementById('doctorsGrid');
@@ -1362,7 +1607,6 @@ function renderDoctors() {
             </div>
         `;
         
-        // Add event listener to the empty state button
         const addBtn = document.getElementById('addDoctorEmptyBtn');
         if (addBtn) {
             addBtn.addEventListener('click', openDoctorModal);
@@ -1412,233 +1656,6 @@ function renderDoctors() {
     attachDoctorActionListeners();
 }
 
-function updateDoctorsStats() {
-  
-    // Update doctors count
-    const doctorsCount = document.getElementById('doctorsCount');
-    const totalDoctors = document.getElementById('totalDoctors');
-    const specialtiesCount = document.getElementById('specialtiesCount');
-    
-    if (doctorsCount) doctorsCount.textContent = `${doctors.length} doctor${doctors.length !== 1 ? 's' : ''}`;
-    if (totalDoctors) totalDoctors.textContent = doctors.length;
-    
-    // Count unique specialties and update tooltip
-    const specialties = new Set(doctors.map(doctor => doctor.specialty).filter(Boolean));
-    if (specialtiesCount) {
-        specialtiesCount.textContent = specialties.size;
-        // Add title for better UX
-        specialtiesCount.title = `Unique specialties: ${Array.from(specialties).join(', ') || 'None'}`;
-    }
-    
-    // Update recent activity
-    updateRecentActivity();
-    
-    console.log(`📊 Stats: ${doctors.length} doctors, ${specialties.size} specialties`);
-}
-
-
-function updateRecentActivity() {
-    const activityList = document.getElementById('activityList');
-    if (!activityList) return;
-    
-    if (doctors.length === 0) {
-        activityList.innerHTML = `
-            <div class="activity-item">
-                <i class="fas fa-info-circle"></i>
-                <span>No recent activity</span>
-            </div>
-        `;
-        return;
-    }
-    
-    // Show last 3 doctors added as recent activity
-    const recentDoctors = doctors.slice(-3).reverse();
-    activityList.innerHTML = recentDoctors.map(doctor => `
-        <div class="activity-item">
-            <i class="fas fa-user-plus"></i>
-            <span>Added ${doctor.name}</span>
-        </div>
-    `).join('');
-}
-
-function setupDoctorModal() {
-    console.log("Setting up doctor modal...");
-    
-    const modal = document.getElementById('doctorModal');
-    const closeBtn = document.getElementById('closeDoctorModal');
-    const cancelBtn = document.getElementById('cancelModalDoctorBtn');
-    const openBtn = document.getElementById('openDoctorModal');
-    const form = document.getElementById('doctorModalForm');
-
-    console.log("Modal elements:", { modal, openBtn, form });
-
-    if (openBtn) {
-        console.log("Adding click listener to open button");
-        openBtn.addEventListener('click', openDoctorModal);
-    } else {
-        console.error("Open button not found!");
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeDoctorModal);
-    }
-
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeDoctorModal);
-    }
-
-    if (form) {
-        form.addEventListener('submit', handleDoctorFormSubmit);
-    }
-
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeDoctorModal();
-            }
-        });
-    }
-}
-
-function openDoctorModal() {
-    const modal = document.getElementById('doctorModal');
-    const modalTitle = document.getElementById('doctorModalTitle');
-    const submitBtn = document.getElementById('submitModalDoctorBtn');
-    
-    if (modal) {
-        modal.style.display = 'flex';
-        editingDoctorId = null;
-        modalTitle.textContent = 'Add New Doctor';
-        submitBtn.textContent = 'Add Doctor';
-        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Doctor';
-        
-        // Reset form
-        const form = document.getElementById('doctorModalForm');
-        if (form) form.reset();
-    }
-}
-
-function closeDoctorModal() {
-    const modal = document.getElementById('doctorModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    editingDoctorId = null;
-}
-
-function handleDoctorFormSubmit(e) {
-    e.preventDefault();
-    console.log("📋 Form submitted!");
-
-    const name = document.getElementById('modalDoctorName').value.trim();
-    const specialty = document.getElementById('modalDoctorSpecialty').value.trim();
-    const phone = document.getElementById('modalDoctorPhone').value.trim();
-    const email = document.getElementById('modalDoctorEmail').value.trim();
-    const address = document.getElementById('modalDoctorAddress').value.trim();
-
-    console.log("Form data:", { name, specialty, phone, email, address });
-
-    if (!name) {
-        alert('Please enter doctor name');
-        return;
-    }
-
-    const doctorData = {
-        name,
-        specialty: specialty || 'General Practitioner',
-        phone,
-        email,
-        address
-    };
-
-    console.log("Processing doctor data:", doctorData);
-
-    if (editingDoctorId) {
-        console.log("Updating existing doctor:", editingDoctorId);
-        updateDoctor(editingDoctorId, doctorData);
-    } else {
-        console.log("Adding new doctor");
-        addDoctor(doctorData);
-    }
-}
-
-function addDoctor(doctorData) {
-    console.log("📝 Adding new doctor:", doctorData);
-    
-    const newDoctor = {
-        id: Date.now(),
-        ...doctorData,
-        createdAt: new Date().toISOString()
-    };
-
-    doctors.push(newDoctor);
-    console.log("💾 Saving doctors to localStorage:", doctors);
-    saveDoctors();
-    
-    console.log("🔄 Re-rendering doctors list");
-    renderDoctors();
-    closeDoctorModal();
-    
-    showNotification('Doctor added successfully!', 'success');
-}
-
-function updateDoctor(doctorId, doctorData) {
-    const doctorIndex = doctors.findIndex(d => d.id === doctorId);
-    if (doctorIndex !== -1) {
-        doctors[doctorIndex] = { ...doctors[doctorIndex], ...doctorData };
-        saveDoctors();
-        renderDoctors();
-        closeDoctorModal();
-        
-        showNotification('Doctor updated successfully!', 'success');
-    }
-}
-
-function deleteDoctor(doctorId) {
-    if (confirm('Are you sure you want to delete this doctor?')) {
-        doctors = doctors.filter(d => d.id !== doctorId);
-        saveDoctors();
-        renderDoctors();
-        
-        showNotification('Doctor deleted successfully!', 'success');
-    }
-}
-
-function editDoctor(doctorId) {
-    const doctor = doctors.find(d => d.id === doctorId);
-    if (!doctor) return;
-
-    editingDoctorId = doctorId;
-
-    const modal = document.getElementById('doctorModal');
-    const modalTitle = document.getElementById('doctorModalTitle');
-    const submitBtn = document.getElementById('submitModalDoctorBtn');
-    
-    if (modal) {
-        modal.style.display = 'flex';
-        modalTitle.textContent = 'Edit Doctor';
-        submitBtn.textContent = 'Update Doctor';
-        submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Doctor';
-
-        // Pre-fill the form
-        document.getElementById('modalDoctorName').value = doctor.name;
-        document.getElementById('modalDoctorSpecialty').value = doctor.specialty || '';
-        document.getElementById('modalDoctorPhone').value = doctor.phone || '';
-        document.getElementById('modalDoctorEmail').value = doctor.email || '';
-        document.getElementById('modalDoctorAddress').value = doctor.address || '';
-    }
-}
-
-function saveDoctors() {
-    console.log("💾 Saving doctors:", doctors);
-    localStorage.setItem('meditrack-doctors', JSON.stringify(doctors));
-    
-    // Verify it was saved
-    const saved = localStorage.getItem('meditrack-doctors');
-    console.log("✅ Verified saved data:", saved);
-}
-
-
 function attachDoctorActionListeners() {
     // Edit buttons
     document.querySelectorAll('.edit-doctor-btn').forEach(btn => {
@@ -1657,6 +1674,201 @@ function attachDoctorActionListeners() {
     });
 }
 
+function updateDoctorsStats() {
+    // Update doctors count
+    const doctorsCount = document.getElementById('doctorsCount');
+    const totalDoctors = document.getElementById('totalDoctors');
+    const specialtiesCount = document.getElementById('specialtiesCount');
+    
+    if (doctorsCount) doctorsCount.textContent = `${doctors.length} doctor${doctors.length !== 1 ? 's' : ''}`;
+    if (totalDoctors) totalDoctors.textContent = doctors.length;
+    
+    // Count unique specialties and update tooltip
+    const specialties = new Set(doctors.map(doctor => doctor.specialty).filter(Boolean));
+    if (specialtiesCount) {
+        specialtiesCount.textContent = specialties.size;
+        specialtiesCount.title = `Unique specialties: ${Array.from(specialties).join(', ') || 'None'}`;
+    }
+    
+    updateRecentActivity();
+    console.log(`📊 Stats: ${doctors.length} doctors, ${specialties.size} specialties`);
+}
+
+function updateRecentActivity() {
+    const activityList = document.getElementById('activityList');
+    if (!activityList) return;
+    
+    if (doctors.length === 0) {
+        activityList.innerHTML = `
+            <div class="activity-item">
+                <i class="fas fa-info-circle"></i>
+                <span>No recent activity</span>
+            </div>
+        `;
+        return;
+    }
+    
+    const recentDoctors = doctors.slice(-3).reverse();
+    activityList.innerHTML = recentDoctors.map(doctor => `
+        <div class="activity-item">
+            <i class="fas fa-user-plus"></i>
+            <span>Added ${doctor.name}</span>
+        </div>
+    `).join('');
+}
+
+// ==================== DOCTORS API FUNCTIONS ====================
+
+async function apiGetDoctors() {
+    try {
+        const userData = getUserData();
+        const response = await fetch(`${API_BASE_URL}/api/doctors`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userData.user_id || ''}`,
+                'User-Id': userData.user_id || ''
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching doctors:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function apiAddDoctor(doctorData) {
+    try {
+        const userData = getUserData();
+        const response = await fetch(`${API_BASE_URL}/api/doctors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userData.user_id || ''}`,
+                'User-Id': userData.user_id || ''
+            },
+            body: JSON.stringify(doctorData),
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error adding doctor:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function apiUpdateDoctor(doctorId, doctorData) {
+    try {
+        const userData = getUserData();
+        const response = await fetch(`${API_BASE_URL}/api/doctors/${doctorId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userData.user_id || ''}`,
+                'User-Id': userData.user_id || ''
+            },
+            body: JSON.stringify(doctorData),
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error updating doctor:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function apiDeleteDoctor(doctorId) {
+    try {
+        const userData = getUserData();
+        const response = await fetch(`${API_BASE_URL}/api/doctors/${doctorId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userData.user_id || ''}`,
+                'User-Id': userData.user_id || ''
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting doctor:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ==================== MY DOCTORS PAGE FUNCTIONALITY ====================
+
+function initMyDoctorsPage() {
+    if (!window.location.pathname.includes('doctors.html')) {
+        return;
+    }
+
+    console.log("Initializing My Doctors page...");
+    
+    const userData = getUserData();
+    const userName = userData.name || 'User';
+    
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = userName;
+    }
+    
+    const avatar = document.querySelector('.avatar-placeholder');
+    if (avatar && userName) {
+        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
+        avatar.textContent = initials;
+    }
+    
+    console.log("📋 Loading doctors...");
+    loadDoctors();
+    
+    console.log("🔄 Setting up modal...");
+    setupDoctorModal();
+    
+    console.log("✅ My Doctors page initialized");
+}
+
+async function loadDoctors() {
+    try {
+        console.log("📥 Loading doctors from backend...");
+        const result = await apiGetDoctors();
+        
+        if (result.success) {
+            doctors = result.doctors || [];
+            console.log(`✅ Loaded ${doctors.length} doctors from backend:`, doctors);
+        } else {
+            console.error('❌ Failed to load doctors:', result.error);
+            doctors = [];
+        }
+        
+        renderDoctors();
+    } catch (error) {
+        console.error('💥 Error loading doctors:', error);
+        doctors = [];
+        renderDoctors();
+    }
+}
 
 // ==================== MAIN INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function () {

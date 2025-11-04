@@ -209,6 +209,31 @@ body {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Form Error Styles */
+.form-group-doctor.error input,
+.form-group-doctor.error textarea {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.1);
+}
+
+.form-group-doctor.error label {
+    color: #e74c3c;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Optional: Add focus styles for better UX */
+.form-group-doctor input:focus,
+.form-group-doctor textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+    outline: none;
+}
 /* Password Input */
 .form-group {
     position: relative;

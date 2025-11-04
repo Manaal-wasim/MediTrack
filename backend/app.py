@@ -785,5 +785,174 @@ def get_authenticated_user_id():
     print("❌ No authentication found")
     return None
 
+# ==================== DOCTORS ENDPOINTS ====================
+
+@app.route('/api/doctors', methods=['GET'])
+def get_doctors():
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        
+        cursor.execute("""
+            SELECT doctor_id as id, name, specialization as specialty, contact as phone
+            FROM Doctor 
+            WHERE client_id = %s
+            ORDER BY name
+        """, (user_id,))
+        
+        doctors = cursor.fetchall()
+        
+        return jsonify({
+            "success": True,
+            "doctors": doctors
+        }), 200
+        
+    except Error as e:
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/doctors', methods=['POST'])
+def add_doctor():
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    data = request.json
+    
+    name = data.get('name')
+    specialty = data.get('specialty')
+    phone = data.get('phone')
+    email = data.get('email')  # Note: Your table doesn't have email column
+    address = data.get('address')  # Note: Your table doesn't have address column
+    
+    if not name:
+        return jsonify({"error": "Doctor name is required"}), 400
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        
+        cursor.execute("""
+            INSERT INTO Doctor (client_id, name, specialization, contact)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, name, specialty, phone))
+        
+        doctor_id = cursor.lastrowid
+        connection.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Doctor added successfully",
+            "doctor_id": doctor_id
+        }), 201
+        
+    except Error as e:
+        connection.rollback()
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/doctors/<int:doctor_id>', methods=['PUT'])
+def update_doctor(doctor_id):
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    data = request.json
+    
+    name = data.get('name')
+    specialty = data.get('specialty')
+    phone = data.get('phone')
+    
+    if not name:
+        return jsonify({"error": "Doctor name is required"}), 400
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        
+        # Check if doctor belongs to user
+        cursor.execute("SELECT client_id FROM Doctor WHERE doctor_id = %s", (doctor_id,))
+        doctor = cursor.fetchone()
+        
+        if not doctor or doctor[0] != user_id:
+            return jsonify({"error": "Doctor not found or access denied"}), 404
+        
+        cursor.execute("""
+            UPDATE Doctor 
+            SET name = %s, specialization = %s, contact = %s
+            WHERE doctor_id = %s
+        """, (name, specialty, phone, doctor_id))
+        
+        connection.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Doctor updated successfully"
+        }), 200
+        
+    except Error as e:
+        connection.rollback()
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/doctors/<int:doctor_id>', methods=['DELETE'])
+def delete_doctor(doctor_id):
+    user_id = get_authenticated_user_id()
+    if not user_id:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    connection = get_db_connection()
+    if not connection:
+        return jsonify({"error": "Database connection failed"}), 500
+    
+    try:
+        cursor = connection.cursor()
+        
+        # Check if doctor belongs to user
+        cursor.execute("SELECT client_id FROM Doctor WHERE doctor_id = %s", (doctor_id,))
+        doctor = cursor.fetchone()
+        
+        if not doctor or doctor[0] != user_id:
+            return jsonify({"error": "Doctor not found or access denied"}), 404
+        
+        cursor.execute("DELETE FROM Doctor WHERE doctor_id = %s", (doctor_id,))
+        
+        connection.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Doctor deleted successfully"
+        }), 200
+        
+    except Error as e:
+        connection.rollback()
+        print(f"Database error: {str(e)}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
