@@ -436,33 +436,28 @@ function initMedicineTracker() {
 }
 
 async function loadMedications() {
-    let result;
-    
-    // Check if we're on the today's schedule page
-    if (window.location.pathname.includes('medicine_schedule') || 
-        document.querySelector('.medicine-tracker-body')) {
-        console.log(' Loading today medications...');
-        // Load only today's medications
-        result = await apiGetTodayMedications();
-    } else {
-        // Load all medications (for other pages)
-        console.log('📋 Loading all medications...');
-        result = await apiGetMedications();
-    }
-    console.log('API Response:', result);
-    
-    if (result.success) {
-        medicines = result.data.medications || [];
-        console.log(`Loaded ${medicines.length} medications`);
-        renderMedicineList();
-    } else {
-        console.error('API Error:', result.data.error);
-        showNotification('Failed to load medications',  + (result.data.error || 'Unknown error'), 'error');
+    try {
+        console.log('📋 Loading medications...');
+        const result = await apiGetMedications(); // Always use the same API
+        
+        console.log('API Response:', result);
+        
+        if (result.success) {
+            medicines = result.data.medications || [];
+            console.log(`✅ Loaded ${medicines.length} medications`);
+            renderMedicineList();
+        } else {
+            console.error('API Error:', result.data.error);
+            showNotification('Failed to load medications: ' + (result.data.error || 'Unknown error'), 'error');
+            medicines = [];
+            renderMedicineList();
+        }
+    } catch (error) {
+        console.error('Error loading medications:', error);
         medicines = [];
         renderMedicineList();
     }
 }
-
 function renderMedicineList() {
     // Check if medicineList exists
     if (!medicineList) return;
@@ -573,43 +568,93 @@ function formatTime(timeString) {
 
 async function handleFormSubmit(e) {
     e.preventDefault();
-
-    const name = document.getElementById('medicineName').value;
-    const dosage = document.getElementById('dosage').value;
-    const frequency = document.getElementById('frequency').value;
-    const time = document.getElementById('scheduleTime').value;
-    const notes = document.getElementById('notes').value;
-    // Combine today's date with the selected time
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const fullDateTime = `${year}-${month}-${day} ${time}:00`;
-
-    const medicationData = {
-        name,
-        dosage,
-        time: fullDateTime,
-        notes
-    };
-
-    let result;
-    if (editingMedicineId) {
-        // Update existing medication
-        result = await apiUpdateMedication(editingMedicineId, medicationData);
-    } else {
-        // Add new medication
-        result = await apiAddMedication(medicationData);
+    console.log("📋 Medication form submitted");
+    
+    try {
+        // Get form values
+        const name = document.getElementById('medicineName').value.trim();
+        const dosage = document.getElementById('medicineDosage').value.trim();
+        const timeValue = document.getElementById('medicineTime').value; // This is just "HH:MM"
+        const notes = document.getElementById('medicineNotes').value.trim();
+        const prescriberSelect = document.getElementById('medicinePrescriber');
+        const prescriberId = prescriberSelect ? prescriberSelect.value : '';
+        
+        console.log("📝 Form data:", { name, dosage, timeValue, notes, prescriberId });
+        
+        // Validation
+        if (!name || !dosage || !timeValue) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Create full datetime string (today's date + selected time)
+        const today = new Date();
+        const [hours, minutes] = timeValue.split(':');
+        today.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        
+        const scheduleTime = today.toISOString().slice(0, 19).replace('T', ' ');
+        console.log("🕒 Full datetime being sent:", scheduleTime);
+        
+        let finalNotes = notes;
+        
+        // Add prescriber info to notes if selected
+        if (prescriberId) {
+            try {
+                const doctors = await getDoctorsList();
+                const selectedDoctor = doctors.find(d => d.id == prescriberId);
+                if (selectedDoctor) {
+                    const prescriberInfo = `Prescribed by: ${selectedDoctor.name} (${selectedDoctor.specialty})`;
+                    finalNotes = notes ? `${notes}\n${prescriberInfo}` : prescriberInfo;
+                    console.log("📋 Added prescriber to notes:", prescriberInfo);
+                }
+            } catch (error) {
+                console.error('Error getting doctor info:', error);
+                // Continue without prescriber info
+            }
+        }
+        
+        const medicationData = {
+            name,
+            dosage,
+            time: scheduleTime, // Send full datetime
+            notes: finalNotes
+        };
+        
+        console.log("🚀 Sending to API:", medicationData);
+        
+        const result = await apiAddMedication(medicationData);
+        
+        if (result.success) {
+            console.log("✅ Medication added successfully");
+            
+            // Store prescriber separately if needed
+            if (prescriberId) {
+                const doctors = await getDoctorsList();
+                const selectedDoctor = doctors.find(d => d.id == prescriberId);
+                if (selectedDoctor) {
+                    saveMedicationPrescriber(result.medicine_id, selectedDoctor);
+                }
+            }
+            
+            showNotification('Medication added successfully!', 'success');
+            e.target.reset();
+            loadMedications();
+        } else {
+            console.error('❌ API returned error:', result);
+            showNotification(result.error || 'Failed to add medication', 'error');
+        }
+        
+    } catch (error) {
+        console.error('💥 Error in form submission:', error);
+        showNotification('Error adding medication: ' + error.message, 'error');
     }
-
-    if (result.success) {
-        showNotification(editingMedicineId ? 'Medicine updated successfully!' : 'Medicine added successfully!', 'success');
-        await loadMedications(); // Reload medications from server
-        closeModal();
-    } else {
-        showNotification(result.data.error || 'Operation failed', 'error');
-    }
-} 
+}
+// Get prescriber info from localStorage
+function getMedicationPrescriber(medicineId) {
+    const key = `meditrack-prescriber-${medicineId}`;
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
 async function markMedicineAsTaken(id) {
     const result = await apiUpdateMedicationStatus(id, 'taken');
     
@@ -726,14 +771,18 @@ async function loadMyMedications(searchTerm = '') {
     }
 }
 
+// Helper function to get prescriber from localStorage
+function getMedicationPrescriber(medicineId) {
+    const key = `meditrack-prescriber-${medicineId}`;
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+}
 function renderMyMedications(medications) {
     const grid = document.getElementById('medicationsGrid');
     if (!grid) return;
 
-    // Clear the list
     grid.innerHTML = '';
 
-    // Check if there are medicines
     if (medications.length === 0) {
         grid.innerHTML = `
             <div class="no-results">
@@ -744,8 +793,10 @@ function renderMyMedications(medications) {
         return;
     }
 
-    // Create medication cards
     medications.forEach(med => {
+        // Get prescriber info ONLY for My Medications page
+        const prescriber = getMedicationPrescriber(med.id);
+        
         const card = document.createElement('div');
         card.className = 'medication-card';
         
@@ -765,7 +816,7 @@ function renderMyMedications(medications) {
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Prescriber:</span>
-                    <span class="detail-value">${med.prescriber}</span>
+                    <span class="detail-value">${prescriber ? `${prescriber.name} (${prescriber.specialty})` : 'Not specified'}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Start Date:</span>
@@ -798,10 +849,8 @@ function renderMyMedications(medications) {
         grid.appendChild(card);
     });
 
-    // Add event listeners to action buttons
     attachMedicationActionListeners();
 }
-
 function setupSearchFunctionality() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
@@ -1558,6 +1607,56 @@ async function deleteDoctor(doctorId) {
     }
 }
 
+// Helper function to get doctors list
+async function getDoctorsList() {
+    try {
+        const result = await apiGetDoctors();
+        return result.success ? result.doctors : [];
+    } catch (error) {
+        console.error('Error getting doctors list:', error);
+        return [];
+    }
+}
+
+// Store prescriber info in localStorage
+function saveMedicationPrescriber(medicineId, doctor) {
+    const key = `meditrack-prescriber-${medicineId}`;
+    localStorage.setItem(key, JSON.stringify(doctor));
+}
+
+// Function to load doctors for the prescriber dropdown
+async function loadDoctorsForPrescriber() {
+    try {
+        const result = await apiGetDoctors();
+        
+        if (result.success) {
+            const doctors = result.doctors || [];
+            const prescriberSelect = document.getElementById('medicinePrescriber');
+            
+            if (prescriberSelect) {
+                // Clear existing options except the first one
+                prescriberSelect.innerHTML = '<option value="">Select a doctor</option>';
+                
+                // Add doctor options
+                doctors.forEach(doctor => {
+                    const option = document.createElement('option');
+                    option.value = doctor.id;
+                    option.textContent = `${doctor.name} - ${doctor.specialty || 'General Practitioner'}`;
+                    prescriberSelect.appendChild(option);
+                });
+                
+                console.log(`✅ Loaded ${doctors.length} doctors for prescriber dropdown`);
+            } else {
+                console.log('ℹ️ Prescriber dropdown not found on this page');
+            }
+        } else {
+            console.error('❌ Failed to load doctors for prescriber:', result.error);
+        }
+    } catch (error) {
+        console.error('💥 Error loading doctors for prescriber:', error);
+    }
+}
+
 function editDoctor(doctorId) {
     const doctor = doctors.find(d => d.id === doctorId);
     if (!doctor) return;
@@ -1884,6 +1983,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initMyDoctorsPage();
 
 
+
     // User Dashboard Initialization
     if (window.location.pathname.includes("dashboard.html")) {
         initDashboard().then(() => {
@@ -1894,6 +1994,17 @@ document.addEventListener('DOMContentLoaded', function () {
         ).catch(err => {
             console.error("Error initializing dashboard:", err);
         });
+    }
+    // Medicine Schedule Page - Load doctors for prescriber dropdown
+    if (window.location.pathname.includes("medicine_schedule.html")) {
+        console.log("📋 Loading doctors for prescriber dropdown...");
+        loadDoctorsForPrescriber();
+    }
+
+    // My Medications Page - Load doctors for prescriber dropdown (if you add it there too)
+    if (window.location.pathname.includes("my_medications.html")) {
+        console.log("📋 Loading doctors for prescriber dropdown...");
+        loadDoctorsForPrescriber();
     }
 
     // Schedule Links

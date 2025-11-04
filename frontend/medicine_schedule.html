@@ -103,7 +103,7 @@
                     <label for="dosage">
                         <i class="fas fa-weight"></i> Dosage
                     </label>
-                    <input type="text" id="dosage" required placeholder="e.g., 500mg">
+                    <input type="text" id="medicineDosage" required placeholder="e.g., 500mg">
                 </div>
                 
                 <div class="form-group-med">
@@ -118,13 +118,23 @@
                         <option value="custom">Custom</option>
                     </select>
                 </div>
+                <!-- Add this to your medication form -->
+                <div class="form-group-med">
+                    <label for="medicinePrescriber">
+                        <i class="fas fa-user-md"></i> Prescribing Doctor
+                    </label>
+                    <select id="medicinePrescriber" name="prescriber">
+                        <option value="">Select a doctor</option>
+                        <!-- Doctors will be loaded dynamically -->
+                    </select>
+                </div>
                 
                 <div class="form-group-med">
                     <label for="scheduleTime">
                         <i class="far fa-clock"></i> Schedule Time
                     </label>
                     <div class="time-inputs">
-                        <input type="time" id="scheduleTime" required>
+                        <input type="time" id="medicineTime" required>
                     </div>
                 </div>
                 
@@ -132,7 +142,7 @@
                     <label for="notes">
                         <i class="fas fa-sticky-note"></i> Notes (Optional)
                     </label>
-                    <input type="text" id="notes" placeholder="Any additional instructions">
+                    <input type="text" id="medicineNotes" placeholder="Any additional instructions">
                 </div>
                 
                 <div class="form-actions">
@@ -146,7 +156,6 @@
     <!-- Notification -->
     <div class="notification" id="notification"></div>
     
-    <script src="app.js"></script>
     <script>
     // Update date and time in real-time
     function updateDateTime() {

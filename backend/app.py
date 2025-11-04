@@ -299,29 +299,45 @@ def get_medications():
     try:
         cursor = connection.cursor(dictionary=True)
         
+        # SIMPLE: Just get medications without complex joins
         cursor.execute("""
-            SELECT m.medicine_id, m.name, m.dosage, m.note as notes,
-                   r.reminder_time as schedule_time, r.status
+            SELECT 
+                m.medicine_id as id,
+                m.name,
+                m.dosage,
+                m.note as notes
             FROM Medicine m
-            LEFT JOIN Reminder r ON m.medicine_id = r.medicine_id
             WHERE m.client_id = %s
-            ORDER BY r.reminder_time
+            ORDER BY m.name
         """, (user_id,))
         
         medications = cursor.fetchall()
         
+        # Now get the most recent reminder for each medication
         formatted_medications = []
         for med in medications:
-            if med['schedule_time']:
+            # Get the most recent reminder for this medication
+            cursor.execute("""
+                SELECT reminder_time as time, status
+                FROM Reminder 
+                WHERE medicine_id = %s 
+                ORDER BY reminder_time DESC 
+                LIMIT 1
+            """, (med['id'],))
+            
+            reminder = cursor.fetchone()
+            
+            if reminder and reminder['time']:
                 formatted_medications.append({
-                    'id': med['medicine_id'],
+                    'id': med['id'],
                     'name': med['name'],
                     'dosage': med['dosage'],
                     'notes': med['notes'] or '',
-                    'time': str(med['schedule_time']),
-                    'status': med['status'] or 'Pending'
+                    'time': str(reminder['time']),
+                    'status': reminder['status'] or 'Pending'
                 })
         
+        print(f"✅ Returning {len(formatted_medications)} unique medications")
         return jsonify({"medications": formatted_medications}), 200
         
     except Error as e:
@@ -329,7 +345,6 @@ def get_medications():
     finally:
         cursor.close()
         connection.close()
-
 @app.route('/api/medications/monthly', methods=['GET'])
 def get_monthly_medications():
     user_id = get_authenticated_user_id()
@@ -415,7 +430,7 @@ def get_medication_icon(medication_name):
         return 'fa-capsules'
 @app.route('/api/medications', methods=['POST'])
 def add_medication():
-    user_id = get_authenticated_user_id()  # Get user ID from header
+    user_id = get_authenticated_user_id()
     if not user_id:
         return jsonify({"error": "Not authenticated"}), 401
     
@@ -425,11 +440,12 @@ def add_medication():
     dosage = data.get('dosage')
     schedule_time = data.get('time')
     notes = data.get('notes')
+    prescriber_id = data.get('prescriber_id')  # NEW
     
     if not name or not dosage or not schedule_time:
         return jsonify({"error": "Name, dosage, and time are required"}), 400
     
-    print(f"🔍 Adding medication for user {user_id}: {name}, {dosage}, {schedule_time}")
+    print(f"🔍 Adding medication for user {user_id}: {name}, {dosage}, {schedule_time}, prescriber: {prescriber_id}")
     
     connection = get_db_connection()
     if not connection:
@@ -438,15 +454,28 @@ def add_medication():
     try:
         cursor = connection.cursor()
         
-        # First insert into Medicine table
-        cursor.execute("""
-            INSERT INTO Medicine (client_id, name, dosage, note)
-            VALUES (%s, %s, %s, %s)
-        """, (user_id, name, dosage, notes))
+        # If prescriber_id is provided, verify it belongs to the user
+        if prescriber_id:
+            cursor.execute("SELECT doctor_id FROM Doctor WHERE doctor_id = %s AND client_id = %s", 
+                         (prescriber_id, user_id))
+            if not cursor.fetchone():
+                return jsonify({"error": "Invalid prescriber"}), 400
+        
+        # Insert into Medicine table (add prescriber_id if available)
+        if prescriber_id:
+            cursor.execute("""
+                INSERT INTO Medicine (client_id, name, dosage, note, prescriber_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_id, name, dosage, notes, prescriber_id))
+        else:
+            cursor.execute("""
+                INSERT INTO Medicine (client_id, name, dosage, note)
+                VALUES (%s, %s, %s, %s)
+            """, (user_id, name, dosage, notes))
         
         medicine_id = cursor.lastrowid
         
-        # Then insert into Reminder table
+        # Insert into Reminder table
         cursor.execute("""
             INSERT INTO Reminder (medicine_id, reminder_time, status)
             VALUES (%s, %s, 'Pending')
@@ -457,6 +486,7 @@ def add_medication():
         print(f"✅ Medication added successfully with ID: {medicine_id}")
         
         return jsonify({
+            "success": True,
             "message": "Medication added successfully",
             "medicine_id": medicine_id
         }), 201
@@ -468,7 +498,6 @@ def add_medication():
     finally:
         cursor.close()
         connection.close()
-
 @app.route('/api/medications/<int:medication_id>', methods=['DELETE'])
 def delete_medication(medication_id):
     try:
