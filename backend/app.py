@@ -723,7 +723,7 @@ def get_my_medications():
         
         # Get all medications for the user with reminder details
         cursor.execute("""
-            SELECT 
+            SELECT DISTINCT
                 m.medicine_id as id,
                 m.name,
                 m.dosage,

@@ -434,30 +434,55 @@ function initMedicineTracker() {
         });
     }
 }
+let loadMedicationsCallCount = 0;
 
 async function loadMedications() {
-    try {
-        console.log('📋 Loading medications...');
-        const result = await apiGetMedications(); // Always use the same API
+    loadMedicationsCallCount++;
+    console.log(`🔢 loadMedications called #${loadMedicationsCallCount} times`);
+    
+    let result;
+    
+    // More specific condition for today's schedule page
+    if (window.location.pathname.includes('medicine_schedule.html') || 
+        (window.location.pathname.includes('medicine_schedule') && window.location.search.includes('action=add'))) {
+        console.log('📋 Loading today medications for schedule page...');
+        result = await apiGetTodayMedications();
+    } else {
+        // Load all medications (for other pages)
+        console.log('📋 Loading all medications...');
+        result = await apiGetMedications();
+    }
+    
+    console.log('API Response:', result);
+    
+    if (result.success) {
+        medicines = result.data.medications || [];
+        console.log(`✅ Loaded ${medicines.length} medications`);
         
-        console.log('API Response:', result);
+        // Check for duplicates in the data itself
+        const uniqueIds = new Set();
+        const duplicates = [];
         
-        if (result.success) {
-            medicines = result.data.medications || [];
-            console.log(`✅ Loaded ${medicines.length} medications`);
-            renderMedicineList();
-        } else {
-            console.error('API Error:', result.data.error);
-            showNotification('Failed to load medications: ' + (result.data.error || 'Unknown error'), 'error');
-            medicines = [];
-            renderMedicineList();
+        medicines.forEach(med => {
+            if (uniqueIds.has(med.id)) {
+                duplicates.push(med.id);
+            }
+            uniqueIds.add(med.id);
+        });
+        
+        if (duplicates.length > 0) {
+            console.log(`🚨 DUPLICATES FOUND IN API DATA: ${duplicates.join(', ')}`);
         }
-    } catch (error) {
-        console.error('Error loading medications:', error);
+        
+        renderMedicineList();
+    } else {
+        console.error('API Error:', result.data.error);
+        showNotification('Failed to load medications: ' + (result.data.error || 'Unknown error'), 'error');
         medicines = [];
         renderMedicineList();
     }
 }
+
 function renderMedicineList() {
     // Check if medicineList exists
     if (!medicineList) return;
@@ -750,22 +775,58 @@ function initMyMedicationsPage() {
     setupAddMedicationButton();
 }
 async function loadMyMedications(searchTerm = '') {
+    console.log("🔄 ========== LOADING MY MEDICATIONS ==========");
+    
     let result;
     
     if (searchTerm) {
+        console.log(`🔍 Searching medications: ${searchTerm}`);
         result = await apiSearchMyMedications(searchTerm);
     } else {
+        console.log('📋 Loading all my medications...');
         result = await apiGetMyMedications();
     }
     
-    console.log('My Medications API Response:', result);
+    console.log('📦 MY MEDICATIONS API RESPONSE:', result);
     
     if (result.success) {
         const medications = result.data.medications || [];
-        console.log(`Loaded ${medications.length} medications`);
-        renderMyMedications(medications);
+        console.log(`🔢 Raw medications from API: ${medications.length}`);
+        console.log("📋 Raw medications:", medications);
+        
+        // Check for duplicates in the API response
+        const seenIds = new Set();
+        const duplicates = [];
+        
+        medications.forEach(med => {
+            if (seenIds.has(med.id)) {
+                duplicates.push(med.id);
+                console.log(`🚨 DUPLICATE IN MY MEDICATIONS: ${med.name} (ID: ${med.id})`);
+            }
+            seenIds.add(med.id);
+        });
+        
+        if (duplicates.length > 0) {
+            console.log(`🚨 DUPLICATE IDs in My Medications: ${duplicates.join(', ')}`);
+        }
+        
+        // Force uniqueness for My Medications
+        const uniqueMedications = [];
+        const finalSeenIds = new Set();
+        
+        medications.forEach(med => {
+            if (!finalSeenIds.has(med.id)) {
+                finalSeenIds.add(med.id);
+                uniqueMedications.push(med);
+            }
+        });
+        
+        console.log(`✅ After deduplication: ${uniqueMedications.length} medications`);
+        console.log("========== LOADING COMPLETE ==========");
+        
+        renderMyMedications(uniqueMedications);
     } else {
-        console.error(' API Error:', result.data.error);
+        console.error('❌ My Medications API Error:', result.data.error);
         showNotification('Failed to load medications: ' + (result.data.error || 'Unknown error'), 'error');
         renderMyMedications([]);
     }
