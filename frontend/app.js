@@ -1,5 +1,5 @@
 // ==================== API CONFIGURATION ====================
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = '';
 
 // API Functions for backend communication
 async function apiSignup(userData) {

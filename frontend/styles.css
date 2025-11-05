@@ -209,6 +209,46 @@ body {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
+/* Settings form specific layout */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 520px;
+    margin-top: 14px;
+}
+.settings-form .form-row label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+.settings-form .form-row input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: white;
+    font-size: 14px;
+}
+.settings-form .form-row input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(249, 203, 214, 0.12);
+}
+/* Center the Save button inside the settings form */
+.settings-form .settings-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent; /* remove white bar behind centered button */
+    margin-top: 12px; /* keep spacing consistent */
+    padding: 0; /* remove any inherited padding */
+}
+.settings-form .btn-primary {
+    padding: 10px 22px;
+}
+
 /* Form Error Styles */
 .form-group-doctor.error input,
 .form-group-doctor.error textarea {
@@ -957,7 +997,7 @@ body {
     padding: 30px;
     animation: modalAppear 0.3s ease-out;
     position: relative;
-    height: 697px;
+    height: auto;
     max-width: 500px;
     /* Prevent modal from getting too wide */
     max-height: 90vh;
@@ -1365,18 +1405,48 @@ tr:nth-child(even) {
     background: rgba(255, 250, 240, 0.7);
 }
 
-.delete-btn {
-    background: #ff4d6d;
+/* Table-scoped action buttons: edit (pastel green) and delete (pastel red) */
+.data-table .edit-btn {
+    background: #d8f8e0; /* pastel green */
+    color: #065f46; /* dark green text */
     border: none;
-    color: white;
     padding: 6px 12px;
     border-radius: 8px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: background 0.18s ease, transform 0.08s ease;
+}
+.data-table .edit-btn:hover {
+    background: #bff0c6; /* slightly darker pastel green */
+    transform: translateY(-1px);
 }
 
-.delete-btn:hover {
-    background: #A97AF2;
+.data-table .delete-btn {
+    background: #ffe1e1; /* pastel red */
+    color: #7a1a1a; /* dark red text */
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.08s ease;
+}
+.data-table .delete-btn:hover {
+    background: #ffbcbc; /* slightly darker pastel red */
+    transform: translateY(-1px);
+}
+
+/* Confirm modal primary (Yes) button - matches destructive color */
+#confirmYes {
+    background: #ffbcbc; /* match delete hover tone */
+    color: #7a1a1a;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.08s ease;
+}
+#confirmYes:hover {
+    background: #ff9a9a;
+    transform: translateY(-1px);
 }
 
 /* Form */

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
 import mysql.connector
 from mysql.connector import Error
@@ -6,18 +6,26 @@ import bcrypt
 from datetime import datetime
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 app.secret_key = 'your-secret-key-here'  # Change this to a random secret key
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-CORS(app, origins=["http://localhost:5500", "http://127.0.0.1:5500","http://localhost:3000", "http://127.0.0.1:3000"], supports_credentials=True, allow_headers=["Content-Type", "Authorization", "User-id"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])  # Enable CORS for all routes
+CORS(app, 
+     resources={
+         r"/*": {
+             "origins": ["http://localhost:5000"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization", "User-id"],
+             "supports_credentials": True
+         }
+     })  # Enable CORS for all routes
 
 # Database configuration
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'azka.123',
+    'password': 'AH14@neena',
     'database': 'SmartHealthReminder'
 }
 
@@ -31,11 +39,26 @@ def get_db_connection():
 
 # Helper function to hash passwords
 def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    # Return a UTF-8 string so it is stored consistently in the DB
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 # Helper function to check password
 def check_password(hashed_password, user_password):
-    return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    # hashed_password may be stored in the DB as bytes or as a string.
+    # Ensure we pass bytes to bcrypt.checkpw.
+    if isinstance(hashed_password, bytes):
+        hashed = hashed_password
+    else:
+        # assume string
+        hashed = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(user_password.encode('utf-8'), hashed)
+
+def is_bcrypt_hash(s):
+    """Return True if s looks like a bcrypt hash string."""
+    try:
+        return isinstance(s, str) and s.startswith('$2')
+    except Exception:
+        return False
 
 def get_authenticated_user_id():
     """Get user ID from session or from Authorization header"""
@@ -58,7 +81,7 @@ def get_authenticated_user_id():
     return None
 @app.route('/')
 def home():
-    return jsonify({"message": "MediTrack Backend is running!"})
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/debug-session', methods=['GET'])
 def debug_session():
@@ -160,14 +183,41 @@ def login():
         """, (email,))
         
         user = cursor.fetchone()
-        
+
         if not user:
             return jsonify({"error": "Invalid email or password"}), 401
-        
-        # Check password
-        if not check_password(user['password'], password):
+
+        stored_password = user.get('password')
+
+        password_ok = False
+
+        # If stored password looks like a bcrypt hash, verify normally.
+        if is_bcrypt_hash(stored_password):
+            try:
+                password_ok = check_password(stored_password, password)
+            except Exception as e:
+                print('Password check error (hashed):', e)
+                password_ok = False
+        else:
+            # Stored password is not hashed (plaintext). Compare directly and migrate to bcrypt.
+            print('⚠️ Detected plaintext password in DB for user:', user.get('user_id'))
+            if stored_password == password:
+                password_ok = True
+                try:
+                    new_hashed = hash_password(password)
+                    cursor.execute(
+                        "UPDATE User SET password = %s WHERE user_id = %s",
+                        (new_hashed, user['user_id'])
+                    )
+                    connection.commit()
+                    print('🔁 Migrated plaintext password to bcrypt for user', user.get('user_id'))
+                except Exception as e:
+                    connection.rollback()
+                    print('Failed to migrate plaintext password:', e)
+
+        if not password_ok:
             return jsonify({"error": "Invalid email or password"}), 401
-        
+
         # Update last login for admin
         if user['role'] == 'admin':
             cursor.execute(

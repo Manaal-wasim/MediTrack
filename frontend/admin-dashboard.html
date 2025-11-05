@@ -1,110 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard | MediTrack</title>
 
-    <!-- Link to your existing stylesheet -->
-    <link rel="stylesheet" href="styles.css">
+  <!-- Use your provided stylesheet (keeps original colors & layout) -->
+  <link rel="stylesheet" href="styles.css">
 
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h2 class="logo">Medi<span>Track</span></h2>
-            <ul>
-                <li class="active" onclick="showSection('home')"><i class="fas fa-home"></i> Home</li>
-                <li onclick="showSection('users')"><i class="fas fa-users"></i> Manage Users</li>
-                <li onclick="showSection('medicines')"><i class="fas fa-pills"></i> Manage Medicines</li>
-                <li onclick="showSection('reports')"><i class="fas fa-chart-bar"></i> Reports</li>
-                <li onclick="showSection('settings')"><i class="fas fa-cog"></i> Settings</li>
-            </ul>
-        </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Home Section -->
-            <section id="home" class="section active">
-                <h1>Welcome, Admin </h1>
-                <p class="subtitle">Here’s an overview of your system statistics.</p>
-
-                <div class="cards">
-                    <div class="card glass">
-                        <h3>1,240</h3>
-                        <p>Registered Users</p>
-                    </div>
-                    <div class="card glass">
-                        <h3>420</h3>
-                        <p>Active Reminders</p>
-                    </div>
-                    <div class="card glass">
-                        <h3>98%</h3>
-                        <p>Uptime Rate</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Users Section -->
-            <section id="users" class="section">
-                <h1>Manage Users</h1>
-                <table>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                    <tr>
-                        <td>Ali Khan</td>
-                        <td>ali@example.com</td>
-                        <td><button class="delete-btn">Delete</button></td>
-                    </tr>
-                    <tr>
-                        <td>Fatima Ahmed</td>
-                        <td>fatima@example.com</td>
-                        <td><button class="delete-btn">Delete</button></td>
-                    </tr>
-                </table>
-            </section>
-
-            <!-- Medicines Section -->
-            <section id="medicines" class="section">
-                <h1>Manage Medicines</h1>
-                <form class="admin-med-form">
-                    <label for="medicine">Medicine Name</label>
-                    <input type="text" id="medicine" placeholder="Enter medicine name">
-                    <label for="dosage">Dosage</label>
-                    <input type="text" id="dosage" placeholder="Enter dosage">
-                    <button type="submit">Add Medicine</button>
-                </form>
-            </section>
-
-            <!-- Reports Section -->
-            <section id="reports" class="section">
-                <h1>Reports</h1>
-                <p>Coming soon... 📊</p>
-            </section>
-
-            <!-- Settings Section -->
-            <section id="settings" class="section">
-                <h1>Settings</h1>
-                <p>Customize your dashboard preferences.</p>
-            </section>
-        </div>
+  <div class="dashboard" style="width:100%;display:flex;min-height:100vh;">
+    <!-- Sidebar -->
+    <div class="sidebar" style="width:260px;">
+      <h2 class="logo">Medi<span>Track</span></h2>
+      <ul>
+        <li class="active" onclick="showSection('home', this)"><i class="fas fa-home"></i> Home</li>
+        <li onclick="showSection('users', this)"><i class="fas fa-users"></i> Manage Users</li>
+        <li onclick="showSection('medicines', this)"><i class="fas fa-pills"></i> Manage Medicines</li>
+        <li onclick="showSection('reminders', this)"><i class="fas fa-bell"></i> Manage Reminders</li>
+        <li onclick="showSection('logs', this)"><i class="fas fa-file-medical"></i> View Logs</li>
+        <li onclick="showSection('reports', this)"><i class="fas fa-chart-bar"></i> Reports</li>
+        <li onclick="showSection('settings', this)"><i class="fas fa-cog"></i> Settings</li>
+        <li onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+      </ul>
     </div>
 
-    <script>
-        // Section switching logic
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+    <!-- Main content -->
+    <div class="main-content" style="flex:1;padding:28px;">
+      <!-- HOME -->
+      <section id="home" class="section active">
+        <h1>Welcome, Admin</h1>
+        <p class="subtitle">Here’s an overview of your system statistics.</p>
 
-            document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
-    </script>
+        <div class="cards" style="margin-top:20px;">
+          <div class="card glass">
+            <h3 id="stat-users">1,240</h3>
+            <p>Registered Users</p>
+          </div>
+          <div class="card glass">
+            <h3 id="stat-reminders">420</h3>
+            <p>Active Reminders</p>
+          </div>
+          <div class="card glass">
+            <h3 id="stat-meds">310</h3>
+            <p>Total Medicines</p>
+          </div>
+          <div class="card glass">
+            <h3 id="stat-uptime">98%</h3>
+            <p>Uptime</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- USERS -->
+      <section id="users" class="section" style="display:none;">
+        <h1>Manage Users</h1>
+
+        <table class="data-table" id="usersTable" style="margin-top:16px;">
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- sample rows; replace with server data -->
+            <tr data-id="1">
+              <td>1</td>
+              <td>Ali Khan</td>
+              <td>ali@example.com</td>
+              <td>Customer</td>
+              <td>
+                
+                
+                <button class="delete-btn" onclick="deleteUser(this)">Delete</button>
+
+              </td>
+            </tr>
+
+            <tr data-id="2">
+              <td>2</td>
+              <td>Fatima Ahmed</td>
+              <td>fatima@example.com</td>
+              <td>Customer</td>
+              <td>
+                
+                <button class="delete-btn" onclick="deleteUser(this)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- MEDICINES -->
+      <section id="medicines" class="section" style="display:none;">
+        <h1>Manage Medicines</h1>
+
+        <!-- Add medicine -->
+        <form id="addMedForm" class="form" onsubmit="event.preventDefault(); addMedicine();">
+          <div class="form-group-med">
+            <label for="newMedName">Medicine Name</label>
+            <input id="newMedName" type="text" placeholder="Enter medicine name" />
+          </div>
+          <div class="form-group-med">
+            <label for="newMedDose">Dosage</label>
+            <input id="newMedDose" type="text" placeholder="Enter dosage" />
+          </div>
+          <div class="form-group-med">
+            <label for="newMedStock">Stock (optional)</label>
+            <input id="newMedStock" type="number" placeholder="Enter stock" />
+          </div>
+          <button type="submit" class="add-btn">Add Medicine</button>
+        </form>
+
+        <h2 style="margin-top:20px;">Existing Medicines</h2>
+        <table id="medTable" class="data-table" style="margin-top:10px;">
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Dosage</th><th>Stock</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr data-id="1">
+              <td>1</td><td>Panadol</td><td>500mg</td><td>200</td>
+              <td>
+                <button class="edit-btn" onclick="openMedEditModal(this)">Edit</button>
+                <button class="delete-btn" onclick="deleteMedicine(this)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- REMINDERS -->
+      <section id="reminders" class="section" style="display:none;">
+        <h1>Manage Reminders</h1>
+
+        <!-- Add reminder -->
+        <form id="addReminderForm" class="form" onsubmit="event.preventDefault(); addReminder();">
+          <div class="form-group-med">
+            <label>User</label>
+            <input id="remUser" type="text" placeholder="User name or ID" />
+          </div>
+          <div class="form-group-med">
+            <label>Medicine</label>
+            <input id="remMed" type="text" placeholder="Medicine name" />
+          </div>
+          <div class="form-group-med">
+            <label>Reminder Time</label>
+            <input id="remTime" type="datetime-local" />
+          </div>
+          <button type="submit" class="add-btn">Add Reminder</button>
+        </form>
+
+        <h2 style="margin-top:20px;">Active Reminders</h2>
+        <table id="remTable" class="data-table" style="margin-top:10px;">
+          <thead>
+            <tr><th>ID</th><th>User</th><th>Medicine</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr data-id="1">
+              <td>1</td><td>Ali Khan</td><td>Panadol</td><td>2025-10-19 08:00</td><td>Active</td>
+              <td><button class="delete-btn" onclick="deleteReminder(this)">Delete</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- LOGS -->
+      <section id="logs" class="section" style="display:none;">
+        <h1>Medicine Logs</h1>
+        <table class="data-table" style="margin-top:10px;">
+          <thead><tr><th>User</th><th>Medicine</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Ali Khan</td><td>Panadol</td><td>2025-10-18</td><td>Taken</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- REPORTS -->
+      <section id="reports" class="section" style="display:none;">
+        <h1>Reports</h1>
+        <div class="cards" style="margin-top:12px;">
+          <div class="card">
+            <h3 id="report-adherence">85%</h3>
+            <p>Reminder Completion Rate</p>
+          </div>
+          <div class="card">
+            <h3 id="report-sent">420</h3>
+            <p>Reminders Sent This Month</p>
+          </div>
+          <div class="card">
+            <h3 id="report-meds">310</h3>
+            <p>Total Medicines Managed</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="section" style="display:none;">
+        <h1>Settings</h1>
+          <form class="form settings-form" onsubmit="event.preventDefault(); updateSettings();">
+            <div class="form-row">
+              <label for="settingName">Admin Display Name</label>
+              <input id="settingName" type="text" placeholder="Admin name" />
+            </div>
+
+            <div class="form-row">
+              <label for="settingEmail">Notification Email</label>
+              <input id="settingEmail" type="email" placeholder="admin@example.com" />
+            </div>
+
+            <div class="form-actions settings-actions" style="margin-top:12px;">
+              <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+          </form>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modals (Users) -->
+  <div id="userEditModal" class="modal">
+    <div class="modal-content">
+      <button class="close" onclick="closeModal('userEditModal')">&times;</button>
+      <h2>Edit User</h2>
+      <label>Name</label><input id="uEditName" type="text" />
+      <label>Email</label><input id="uEditEmail" type="email" />
+      <label>Role</label>
+      <select id="uEditRole"><option>Customer</option><option>Admin</option></select>
+      <div class="form-actions" style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="saveUserEdit()">Save</button>
+        <button class="btn btn-secondary" onclick="closeModal('userEditModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="userResetModal" class="modal">
+    <div class="modal-content">
+      <button class="close" onclick="closeModal('userResetModal')">&times;</button>
+      <h2>Reset Password</h2>
+      <p id="uResetEmailText"></p>
+      <label>New password</label><input id="uNewPassword" type="password" />
+      <div class="form-actions" style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="saveUserReset()">Update</button>
+        <button class="btn btn-secondary" onclick="closeModal('userResetModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals (Medicine) -->
+  <div id="medEditModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Medicine</h2>
+        <button class="close-btn" onclick="closeModal('medEditModal')">&times;</button>
+      </div>
+
+      <div class="form-group-med">
+        <label for="medEditName">Name</label>
+        <input id="medEditName" type="text" />
+      </div>
+
+      <div class="form-group-med">
+        <label for="medEditDose">Dosage</label>
+        <input id="medEditDose" type="text" />
+      </div>
+
+      <div class="form-group-med">
+        <label for="medEditStock">Stock</label>
+        <input id="medEditStock" type="number" />
+      </div>
+
+      <div class="form-actions" style="margin-top:12px; display:flex; gap:10px;">
+        <button class="btn btn-primary" onclick="saveMedEdit()">Save</button>
+        <button class="btn btn-secondary" onclick="closeModal('medEditModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal (Confirm) used for deletion confirmation -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <button class="close" onclick="closeModal('confirmModal')">&times;</button>
+      <h2 id="confirmTitle">Confirm</h2>
+      <p id="confirmMessage">Are you sure?</p>
+      <div class="form-actions" style="margin-top:12px;">
+        <button class="btn btn-primary" id="confirmYes">Yes</button>
+        <button class="btn btn-secondary" onclick="closeModal('confirmModal')">No</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal (Reminder Edit) -->
+  <div id="remEditModal" class="modal">
+    <div class="modal-content">
+      <button class="close" onclick="closeModal('remEditModal')">&times;</button>
+      <h2>Edit Reminder</h2>
+      <label>User</label><input id="remEditUser" type="text" />
+      <label>Medicine</label><input id="remEditMed" type="text" />
+      <label>Time</label><input id="remEditTime" type="datetime-local" />
+      <div class="form-actions" style="margin-top:12px;">
+        <button class="btn btn-primary" onclick="saveRemEdit()">Save</button>
+        <button class="btn btn-secondary" onclick="closeModal('remEditModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // showSection updated to accept caller element to set active class properly
+    function showSection(id, caller) {
+      document.querySelectorAll('.section').forEach(s => {
+        s.style.display = s.id === id ? 'block' : 'none';
+      });
+      document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+      if (caller) caller.classList.add('active');
+    }
+
+    function logout() {
+      alert('Logged out (demo).');
+      // In real app: call logout endpoint or window.location='/logout'
+    }
+
+    // Generic modals
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; document.getElementById(id).style.alignItems = 'center'; }
+
+    // ========== USER actions ==========
+    let currentUserRow = null;
+    function openUserEditModal(btn) {
+      const row = btn.closest('tr');
+      currentUserRow = row;
+      const name = row.children[1].textContent;
+      const email = row.children[2].textContent;
+      const role = row.children[3].textContent;
+      document.getElementById('uEditName').value = name;
+      document.getElementById('uEditEmail').value = email;
+      document.getElementById('uEditRole').value = role;
+      openModal('userEditModal');
+    }
+    function saveUserEdit() {
+      if (!currentUserRow) return;
+      const name = document.getElementById('uEditName').value;
+      const email = document.getElementById('uEditEmail').value;
+      const role = document.getElementById('uEditRole').value;
+      currentUserRow.children[1].textContent = name;
+      currentUserRow.children[2].textContent = email;
+      currentUserRow.children[3].textContent = role;
+      closeModal('userEditModal');
+      alert('User updated (demo). In production this will call backend API.');
+    }
+
+    function openUserResetModal(btn) {
+      const row = btn.closest('tr');
+      currentUserRow = row;
+      const email = row.children[2].textContent;
+      document.getElementById('uResetEmailText').textContent = 'Reset password for: ' + email;
+      document.getElementById('uNewPassword').value = '';
+      openModal('userResetModal');
+    }
+    function saveUserReset() {
+      const newPw = document.getElementById('uNewPassword').value;
+      if (!newPw) { alert('Enter new password'); return; }
+      // call backend in production
+      closeModal('userResetModal');
+      alert('Password has been reset (demo).');
+    }
+
+    function deleteUser(btn) {
+      const row = btn.closest('tr');
+      const name = row.children[1].textContent;
+      document.getElementById('confirmTitle').textContent = 'Delete User';
+      document.getElementById('confirmMessage').textContent = `Delete user "${name}"? This action cannot be undone.`;
+      openModal('confirmModal');
+      const yes = document.getElementById('confirmYes');
+      // remove existing handlers
+      yes.onclick = function() {
+        row.remove();
+        closeModal('confirmModal');
+        alert('User deleted (demo). In production this will call backend API.');
+      };
+    }
+
+    // ========== MEDICINE actions ==========
+    let currentMedRow = null;
+    function addMedicine() {
+      const name = document.getElementById('newMedName').value.trim();
+      const dose = document.getElementById('newMedDose').value.trim();
+      const stock = document.getElementById('newMedStock').value.trim() || '—';
+      if (!name || !dose) { alert('Please enter medicine name and dosage'); return; }
+      const tbody = document.querySelector('#medTable tbody');
+      const newRow = document.createElement('tr');
+      // give a simple new id (in production use server id)
+      const newId = Date.now();
+      newRow.setAttribute('data-id', newId);
+      newRow.innerHTML = `<td>${newId}</td><td>${escapeHtml(name)}</td><td>${escapeHtml(dose)}</td><td>${escapeHtml(stock)}</td>
+        <td><button onclick="openMedEditModal(this)">Edit</button> <button class="delete-btn" onclick="deleteMedicine(this)">Delete</button></td>`;
+      tbody.appendChild(newRow);
+      document.getElementById('newMedName').value = '';
+      document.getElementById('newMedDose').value = '';
+      document.getElementById('newMedStock').value = '';
+      updateStats();
+    }
+
+    function openMedEditModal(btn) {
+      const row = btn.closest('tr');
+      currentMedRow = row;
+      document.getElementById('medEditName').value = row.children[1].textContent;
+      document.getElementById('medEditDose').value = row.children[2].textContent;
+      document.getElementById('medEditStock').value = row.children[3].textContent === '—' ? '' : row.children[3].textContent;
+      openModal('medEditModal');
+    }
+    function saveMedEdit() {
+      if (!currentMedRow) return;
+      currentMedRow.children[1].textContent = document.getElementById('medEditName').value;
+      currentMedRow.children[2].textContent = document.getElementById('medEditDose').value;
+      currentMedRow.children[3].textContent = document.getElementById('medEditStock').value || '—';
+      closeModal('medEditModal');
+      alert('Medicine updated (demo).');
+    }
+
+    function deleteMedicine(btn) {
+      const row = btn.closest('tr');
+      const name = row.children[1].textContent;
+      document.getElementById('confirmTitle').textContent = 'Delete Medicine';
+      document.getElementById('confirmMessage').textContent = `Delete medicine "${name}"? This will remove it for all users.`;
+      openModal('confirmModal');
+      document.getElementById('confirmYes').onclick = function() {
+        row.remove();
+        closeModal('confirmModal');
+        alert('Medicine deleted (demo).');
+        updateStats();
+      };
+    }
+
+    // ========== REMINDER actions ==========
+    let currentRemRow = null;
+    function addReminder() {
+      const user = document.getElementById('remUser').value.trim();
+      const med = document.getElementById('remMed').value.trim();
+      const time = document.getElementById('remTime').value;
+      if (!user || !med || !time) { alert('Please fill all fields'); return; }
+      const tbody = document.querySelector('#remTable tbody');
+      const id = Date.now();
+      const row = document.createElement('tr');
+      row.setAttribute('data-id', id);
+      const displayTime = (new Date(time)).toLocaleString();
+      row.innerHTML = `<td>${id}</td><td>${escapeHtml(user)}</td><td>${escapeHtml(med)}</td><td>${escapeHtml(displayTime)}</td><td>Active</td>
+        <td><button onclick="openRemEditModal(this)">Edit</button> <button class="delete-btn" onclick="deleteReminder(this)">Delete</button></td>`;
+      tbody.appendChild(row);
+      document.getElementById('remUser').value = '';
+      document.getElementById('remMed').value = '';
+      document.getElementById('remTime').value = '';
+      updateStats();
+      alert('Reminder added (demo).');
+    }
+
+    function openRemEditModal(btn) {
+      const row = btn.closest('tr');
+      currentRemRow = row;
+      document.getElementById('remEditUser').value = row.children[1].textContent;
+      document.getElementById('remEditMed').value = row.children[2].textContent;
+      // attempt to parse time to yyyy-mm-ddThh:mm for input value; if fails, blank
+      const raw = row.children[3].textContent;
+      try {
+        const d = new Date(raw);
+        const iso = d.toISOString().slice(0,16);
+        document.getElementById('remEditTime').value = iso;
+      } catch(e) {
+        document.getElementById('remEditTime').value = '';
+      }
+      openModal('remEditModal');
+    }
+
+    function saveRemEdit() {
+      if (!currentRemRow) return;
+      currentRemRow.children[1].textContent = document.getElementById('remEditUser').value;
+      currentRemRow.children[2].textContent = document.getElementById('remEditMed').value;
+      const t = document.getElementById('remEditTime').value;
+      currentRemRow.children[3].textContent = t ? (new Date(t)).toLocaleString() : currentRemRow.children[3].textContent;
+      closeModal('remEditModal');
+      alert('Reminder updated (demo).');
+    }
+
+    function deleteReminder(btn) {
+      const row = btn.closest('tr');
+      const user = row.children[1].textContent;
+      const med = row.children[2].textContent;
+      document.getElementById('confirmTitle').textContent = 'Delete Reminder';
+      document.getElementById('confirmMessage').textContent = `Delete reminder for ${user} - ${med}?`;
+      openModal('confirmModal');
+      document.getElementById('confirmYes').onclick = function() {
+        row.remove();
+        closeModal('confirmModal');
+        updateStats();
+        alert('Reminder deleted (demo).');
+      };
+    }
+
+    // Helpers
+    function escapeHtml(str) {
+      return str.replace(/[&<>"'`=\/]/g, function(s) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#47;','`':'&#96;','=':'&#61;'})[s]; });
+    }
+
+    function updateStats() {
+      // update small summary stats from current table counts
+      const usersCount = document.querySelectorAll('#usersTable tbody tr').length;
+      const medCount = document.querySelectorAll('#medTable tbody tr').length;
+      const remCount = document.querySelectorAll('#remTable tbody tr').length;
+      document.getElementById('stat-users').textContent = usersCount;
+      document.getElementById('stat-meds').textContent = medCount;
+      document.getElementById('stat-reminders').textContent = remCount;
+    }
+
+    function updateSettings() {
+      const name = document.getElementById('settingName').value.trim();
+      const email = document.getElementById('settingEmail').value.trim();
+      alert(`Settings saved (demo)\nName: ${name}\nEmail: ${email}`);
+    }
+
+    // Close modals when clicking outside modal-content
+    window.addEventListener('click', function(e){
+      document.querySelectorAll('.modal').forEach(m => {
+        if (m.style.display !== 'none' && e.target === m) m.style.display = 'none';
+      });
+    });
+
+    // initialize stats on load
+    updateStats();
+  </script>
+  
+
 </body>
 </html>
