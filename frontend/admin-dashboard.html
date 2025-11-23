@@ -258,8 +258,8 @@
       <h2 id="confirmTitle">Confirm</h2>
       <p id="confirmMessage">Are you sure?</p>
       <div class="form-actions" style="margin-top:12px;">
-        <button class="btn btn-primary" id="confirmYes">Yes</button>
-        <button class="btn btn-secondary" onclick="closeAdminModal('confirmModal')">No</button>
+        <button type="button" class="btn btn-primary" id="confirmYes">Yes</button>
+        <button type="button" class="btn btn-secondary" onclick="closeAdminModal('confirmModal')">No</button>
       </div>
     </div>
   </div>
@@ -388,8 +388,7 @@
       document.getElementById('confirmTitle').textContent = 'Delete User';
       document.getElementById('confirmMessage').textContent = `Delete user "${name}"? This action cannot be undone.`;
       openAdminModal('confirmModal');
-      const yes = document.getElementById('confirmYes');
-      yes.onclick = async function() {
+      setConfirmAction(async function() {
         try {
           const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE', credentials: 'include' });
           if (!res.ok) {
@@ -404,7 +403,7 @@
           console.error('deleteUser error', e);
           alert('Failed to delete user: ' + e.message);
         }
-      };
+      });
     }
 
     // ========== MEDICINE actions ==========
@@ -482,7 +481,7 @@
       document.getElementById('confirmTitle').textContent = 'Delete Medicine';
       document.getElementById('confirmMessage').textContent = `Delete medicine "${name}"? This will remove it for all users.`;
       openAdminModal('confirmModal');
-      document.getElementById('confirmYes').onclick = async function() {
+      setConfirmAction(async function() {
         try {
           const res = await fetch(`/api/admin/medicines/${id}`, { method: 'DELETE', credentials: 'include' });
           if (!res.ok) {
@@ -497,23 +496,58 @@
           console.error('deleteMedicine error', e);
           alert('Failed to delete medicine: ' + e.message);
         }
-      };
+      });
     }
 
     // ========== REMINDER actions ==========
     let currentRemRow = null;
+    // Helper to set confirm modal action reliably. Accepts an async function and wires it
+    // to the confirm button. The handler will be cleared after invocation.
+    function setConfirmAction(action) {
+      const yes = document.getElementById('confirmYes');
+      // remove any previous handler
+      yes.onclick = null;
+      yes.onclick = async function() {
+        try {
+          await action();
+        } catch (e) {
+          console.error('confirm action error', e);
+        } finally {
+          // clear handler after running
+          yes.onclick = null;
+        }
+      };
+    }
     function addReminder() {
       const user = document.getElementById('remUser').value.trim();
       const med = document.getElementById('remMed').value.trim();
       const time = document.getElementById('remTime').value;
       if (!user || !med || !time) { alert('Please fill all fields'); return; }
       const tbody = document.querySelector('#remTable tbody');
-      const id = Date.now();
+
+      // Clear any "No reminders found" placeholder if present
+      if (tbody.textContent && tbody.textContent.trim().includes('No reminders found')) {
+        tbody.innerHTML = '';
+      }
+
+      // Generate a small incremental client-side ID for demo rows (does NOT change server DB ids).
+      // We will store the client id in data-id for demo rows, but display a sequential index in the table.
+      let maxId = 0;
+      tbody.querySelectorAll('tr').forEach(r => {
+        const rid = parseInt(r.getAttribute('data-id'));
+        if (!isNaN(rid) && rid > maxId) maxId = rid;
+      });
+      const clientId = (maxId || 0) + 1;
+
       const row = document.createElement('tr');
-      row.setAttribute('data-id', id);
+      row.setAttribute('data-id', clientId);
       const displayTime = (new Date(time)).toLocaleString();
-      row.innerHTML = `<td>${id}</td><td>${escapeHtml(user)}</td><td>${escapeHtml(med)}</td><td>${escapeHtml(displayTime)}</td><td>Active</td>
-        <td><button onclick="openRemEditModal(this)">Edit</button> <button class="delete-btn" onclick="deleteReminder(this)">Delete</button></td>`;
+
+      // Compute the display index (1-based) based on current rows after clearing placeholder
+      const displayIndex = tbody.querySelectorAll('tr').length + 1;
+
+      row.innerHTML = `<td>${displayIndex}</td><td>${escapeHtml(user)}</td><td>${escapeHtml(med)}</td><td>${escapeHtml(displayTime)}</td><td>Active</td>
+        <td><button class="delete-btn" onclick="deleteReminder(this)">Delete</button></td>`;
       tbody.appendChild(row);
       document.getElementById('remUser').value = '';
       document.getElementById('remMed').value = '';
@@ -557,7 +591,7 @@
       document.getElementById('confirmTitle').textContent = 'Delete Reminder';
       document.getElementById('confirmMessage').textContent = `Delete reminder for ${user} - ${med}?`;
       openAdminModal('confirmModal');
-      document.getElementById('confirmYes').onclick = async function() {
+      setConfirmAction(async function() {
         try {
           const res = await fetch(`/api/admin/reminders/${id}`, { method: 'DELETE', credentials: 'include' });
           if (!res.ok) {
@@ -567,12 +601,13 @@
           await loadReminders();
           closeAdminModal('confirmModal');
           updateStats();
-          alert('Reminder deleted');
         } catch (e) {
           console.error('deleteReminder error', e);
-          alert('Failed to delete reminder: ' + e.message);
+          // Removed blocking alert to avoid browser "localhost says" dialogs.
+          // You can uncomment the next line to show a non-blocking message in the UI.
+          // document.getElementById('confirmMessage').textContent = 'Failed to delete reminder: ' + e.message;
         }
-      };
+      });
     }
 
     // Helpers
@@ -719,12 +754,20 @@
           tbody.innerHTML = '<tr><td colspan="6">No reminders found</td></tr>';
         } else {
           tbody.innerHTML = '';
-          rems.forEach(r => {
+          rems.forEach((r, idx) => {
             const tr = document.createElement('tr');
+            // keep the real DB id in data-id for server actions, but display a sequential index in the UI
             tr.setAttribute('data-id', r.id);
             const displayTime = r.reminder_time ? new Date(r.reminder_time).toLocaleString() : '';
-            tr.innerHTML = `<td>${r.id}</td><td>${escapeHtml(r.client_id || '')}</td><td>${escapeHtml(r.medicine_name || '')}</td><td>${escapeHtml(displayTime)}</td><td>${escapeHtml(r.status || '')}</td>
-              <td><button class="delete-btn" onclick="deleteReminder(this)">Delete</button></td>`;
+            const displayIndex = idx + 1;
+
+            // By default only show Delete. Show Edit only when backend provides an `editable` flag (truthy).
+            const actions = (r.editable || r.editable === undefined)
+              ? `<button class="delete-btn" onclick="deleteReminder(this)">Delete</button>`
+              : `<button class="delete-btn" onclick="deleteReminder(this)">Delete</button>`; // backend can set editable:false to hide edit in future
+
+            tr.innerHTML = `<td>${displayIndex}</td><td>${escapeHtml(r.client_id || '')}</td><td>${escapeHtml(r.medicine_name || '')}</td><td>${escapeHtml(displayTime)}</td><td>${escapeHtml(r.status || '')}</td>
+              <td>${actions}</td>`;
             tbody.appendChild(tr);
           });
         }

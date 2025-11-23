@@ -2306,6 +2306,7 @@ async function loadDoctors() {
 }
 
 // ==================== MAIN INITIALIZATION ====================
+// Notification polling and browser notification helpers removed per user request.
 document.addEventListener('DOMContentLoaded', function() {
     console.log("=== DEBUG: Page loaded ===");
     console.log("Current page:", window.location.pathname);
@@ -2479,42 +2480,55 @@ const medicinesTaken = 24;
 const medicinesMissed = 6;
 const totalDays = medicinesTaken + medicinesMissed;
 
-// Update text fields
-document.getElementById("medTaken").textContent = medicinesTaken;
-document.getElementById("medMissed").textContent = medicinesMissed;
+function initSampleStatsAndChart() {
+    // Update text fields only if elements exist on the page
+    const medTakenEl = document.getElementById("medTaken");
+    const medMissedEl = document.getElementById("medMissed");
+    const adherenceEl = document.getElementById("adherenceRate");
 
-const rate = ((medicinesTaken / totalDays) * 100).toFixed(1);
-document.getElementById("adherenceRate").textContent = rate + "%";
+    if (medTakenEl) medTakenEl.textContent = medicinesTaken;
+    if (medMissedEl) medMissedEl.textContent = medicinesMissed;
 
-// Chart drawing
-const canvas = document.getElementById("adherenceChart");
-const ctx = canvas.getContext("2d");
+    if (adherenceEl) {
+        const rate = ((medicinesTaken / totalDays) * 100).toFixed(1);
+        adherenceEl.textContent = rate + "%";
+    }
 
-canvas.width = 600;
-canvas.height = 300;
+    // Chart drawing - only if canvas exists
+    const canvas = document.getElementById("adherenceChart");
+    if (!canvas || !canvas.getContext) return;
 
-// Bar positions
-const barWidth = 120;
-const spacing = 80;
-const baseLine = 250;
+    const ctx = canvas.getContext("2d");
+    canvas.width = 600;
+    canvas.height = 300;
 
-// Scale
-const maxValue = Math.max(medicinesTaken, medicinesMissed);
-const scale = 180 / maxValue;
+    // Bar positions
+    const barWidth = 120;
+    const spacing = 80;
+    const baseLine = 250;
 
-// Draw bars
-function drawBar(x, height, color, label, value) {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, baseLine - height, barWidth, height);
+    // Scale (guard against divide by zero)
+    const maxValue = Math.max(medicinesTaken || 0, medicinesMissed || 0, 1);
+    const scale = 180 / maxValue;
 
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#1f2937";
-    ctx.fillText(label, x + 20, baseLine + 25);
-    ctx.fillText(value, x + 40, baseLine - height - 10);
+    // Draw bars
+    function drawBar(x, height, color, label, value) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, baseLine - height, barWidth, height);
+
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#1f2937";
+        ctx.fillText(label, x + 20, baseLine + 25);
+        ctx.fillText(value, x + 40, baseLine - height - 10);
+    }
+
+    drawBar(120, medicinesTaken * scale, "#b5e48c", "Taken", medicinesTaken);
+    drawBar(120 + barWidth + spacing, medicinesMissed * scale, "#ffadad", "Missed", medicinesMissed);
 }
 
-drawBar(120, medicinesTaken * scale, "#b5e48c", "Taken", medicinesTaken);
-drawBar(120 + barWidth + spacing, medicinesMissed * scale, "#ffadad", "Missed", medicinesMissed);
-
-
-
+// Run safely (will no-op if elements aren't present)
+try {
+    initSampleStatsAndChart();
+} catch (e) {
+    console.error('Error initializing sample stats/chart', e);
+}
